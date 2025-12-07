@@ -5,8 +5,8 @@ const fs = require('fs-extra');
 const mockConfig = {
     gameVersion: '1.21.1',
     fabricLoaderVersion: '0.16.9',
-    repoUser: 'Antaneyes',
-    repoName: 'minecraft-launcher-custom',
+    repoUser: 'Chomingo',
+    repoName: 'Hoppercloud',
     branch: 'dev'
 };
 
