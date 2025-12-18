@@ -60,9 +60,9 @@ function createWindow() {
     mainWindow.removeMenu();
 
     mainWindow.once('ready-to-show', async () => {
-        const channel = await gameUpdater.getChannel();
-        autoUpdater.allowPrerelease = (channel === 'beta');
-        log.info(`Configurando AutoUpdater: Canal=${channel}, AllowPrerelease=${autoUpdater.allowPrerelease}`);
+        // AutoUpdater now defaults to stable/master unless user overrides via config
+        autoUpdater.allowPrerelease = false;
+        log.info('Iniciando AutoUpdater...');
         autoUpdater.checkForUpdates();
     });
 }
@@ -83,17 +83,11 @@ app.on('activate', () => {
 
 // IPC Handlers
 ipcMain.handle('get-update-channel', async () => {
-    return await gameUpdater.getChannel();
+    return 'master'; // Fallback
 });
 
 ipcMain.handle('set-update-channel', async (event, channel) => {
-    await gameUpdater.setChannel(channel);
-
-    // Reconfigure and check for updates immediately
-    autoUpdater.allowPrerelease = (channel === 'beta');
-    log.info(`Canal cambiado a ${channel}. Re-comprobando actualizaciones...`);
-    autoUpdater.checkForUpdates();
-
+    // Logic removed as per new multi-instance branch system
     return true;
 });
 
