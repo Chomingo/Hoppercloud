@@ -59,20 +59,20 @@ class GameUpdater extends EventEmitter {
 
         let manifest;
 
-        // DEV MODE: Read local manifest if no URL (or if explicitly disabled, but keeping simple for now)
-        if (!app.isPackaged && branch === 'local') {
+        // DEV MODE: Read local manifest (Simplified)
+        if (!app.isPackaged && manifestUrl === 'local') {
             // Logic for local testing if needed
         }
 
         if (!manifest) {
             try {
-                const response = await axios.get(`${updateUrl}?t=${Date.now()}`);
+                const response = await axios.get(`${manifestUrl}?t=${Date.now()}`);
                 manifest = response.data;
             } catch (e) {
                 if (e.code === 'ENOTFOUND' || e.code === 'ETIMEDOUT') {
                     this.emit('log', 'No se pudo conectar al servidor de actualizaciones (Sin internet o servidor caído).');
                 } else if (e.response && e.response.status === 404) {
-                    this.emit('log', `Error 404: No se encontró el manifest en la rama '${branch}'. Asegúrate de que existe.`);
+                    this.emit('log', `Error 404: No se encontró el manifest en ${manifestUrl}. Asegúrate de que existe.`);
                 } else {
                     this.emit('log', `Error descargando manifiesto: ${e.message}`);
                 }

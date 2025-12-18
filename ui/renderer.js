@@ -47,7 +47,6 @@ const btnText = document.querySelector('.btn-text');
 const sidebar = document.getElementById('sidebar');
 const instanceTitle = document.getElementById('instance-title');
 const instanceDesc = document.getElementById('instance-desc');
-const openFolderBtn = document.getElementById('open-folder-btn');
 
 function renderSidebar() {
     if (!sidebar) return;
@@ -113,15 +112,6 @@ function triggerUpdate(instanceId) {
 // Initialize UI
 renderSidebar();
 updateInstanceUI();
-
-// Handle Open Mods Folder
-if (openFolderBtn) {
-    openFolderBtn.addEventListener('click', () => {
-        if (selectedInstance) {
-            ipcRenderer.send('open-mods-folder', selectedInstance.modsDir);
-        }
-    });
-}
 
 // Load saved username
 const savedUsername = localStorage.getItem('savedUsername');
