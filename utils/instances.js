@@ -27,5 +27,15 @@ module.exports = [
         gameDir: 'instances/tech',
         enabled: true,
         manifestUrl: 'https://raw.githubusercontent.com/Chomingo/Hoppercloud/tech-dev/manifest.json'
+    },
+    {
+        id: 'instance_dev',
+        name: 'Beta / Desarrollo',
+        icon: 'assets/icon_dev.png',
+        description: 'Prueba las últimas novedades aquí',
+        modsDir: 'instances/dev/mods',
+        gameDir: 'instances/dev',
+        enabled: true,
+        manifestUrl: 'https://raw.githubusercontent.com/Chomingo/Hoppercloud/dev/manifest.json'
     }
 ];
