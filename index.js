@@ -97,7 +97,10 @@ ipcMain.handle('set-update-channel', async (event, channel) => {
     return true;
 });
 
-ipcMain.on('check-updates', async (event) => {
+// Instances
+const instances = require('./utils/instances');
+
+ipcMain.on('check-updates', async (event, { instanceId } = {}) => {
     const sender = event.sender;
 
     // Setup listeners for this update session
@@ -117,13 +120,33 @@ ipcMain.on('check-updates', async (event) => {
 
     try {
         sender.send('status', 'Buscando Actualizaciones');
-        const currentChannel = await gameUpdater.getChannel();
-        sender.send('log', `Buscando actualizaciones (Canal: ${currentChannel})...`);
 
-        // Try to import settings from TLauncher if this is a fresh install
-        await importSettings(gameUpdater.gameRoot, sender);
+        // Resolve Instance
+        const selectedInstance = instances.find(i => i.id === instanceId) || instances[0];
 
-        await gameUpdater.checkAndDownloadUpdates();
+        // Resolve Manifest URL: Use direct URL if available, otherwise construct it or default to master
+        let manifestUrl = selectedInstance.manifestUrl;
+        if (!manifestUrl) {
+            const branch = selectedInstance.branch || 'master';
+            manifestUrl = `https://raw.githubusercontent.com/Chomingo/Hoppercloud/${branch}/manifest.json`;
+        }
+
+        // Determine Target Directory
+        let gameDirectory = GAME_ROOT;
+        if (selectedInstance.gameDir) {
+            if (path.isAbsolute(selectedInstance.gameDir)) {
+                gameDirectory = selectedInstance.gameDir;
+            } else {
+                gameDirectory = path.join(GAME_ROOT, selectedInstance.gameDir);
+            }
+        } else if (selectedInstance.id !== 'default') {
+            gameDirectory = path.join(GAME_ROOT, 'instances', selectedInstance.id);
+        }
+
+        sender.send('log', `Verificando actualizaciones para: ${selectedInstance.name} en ${manifestUrl}`);
+
+        // Check and Download
+        await gameUpdater.checkAndDownloadUpdates(gameDirectory, manifestUrl);
 
         sender.send('update-complete');
         sender.send('status', 'Listo');
@@ -138,7 +161,7 @@ ipcMain.on('check-updates', async (event) => {
     }
 });
 
-ipcMain.on('launch-game', async (event, { username, mode, memory }) => {
+ipcMain.on('launch-game', async (event, { username, mode, memory, instanceId }) => {
     const sender = event.sender;
 
     // Helper for logging
@@ -161,7 +184,7 @@ ipcMain.on('launch-game', async (event, { username, mode, memory }) => {
         logToConsole('Iniciando juego...');
 
         // Launch Game (updates are assumed to be done)
-        await launchGame(username, sender, auth, memory, (msg) => consoleLog.info(msg));
+        await launchGame(username, sender, auth, memory, (msg) => consoleLog.info(msg), instanceId);
 
         sender.send('status', 'Jugando');
     } catch (error) {
@@ -170,6 +193,27 @@ ipcMain.on('launch-game', async (event, { username, mode, memory }) => {
         consoleLog.error(error.message);
     }
 });
+
+const { shell } = require('electron');
+const { GAME_ROOT } = require('./utils/constants');
+const fs = require('fs-extra');
+
+ipcMain.on('open-mods-folder', async (event, relativePath) => {
+    try {
+        let folderPath;
+        if (path.isAbsolute(relativePath)) {
+            folderPath = relativePath;
+        } else {
+            folderPath = path.join(GAME_ROOT, relativePath);
+        }
+
+        await fs.ensureDir(folderPath); // Create if it doesn't exist
+        await shell.openPath(folderPath);
+    } catch (e) {
+        console.error('Failed to open mods folder:', e);
+    }
+});
+
 
 // AutoUpdater Events
 autoUpdater.on('checking-for-update', () => {

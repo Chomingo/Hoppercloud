@@ -4,7 +4,9 @@ const { Client } = require('minecraft-launcher-core');
 const { GAME_ROOT } = require('./constants');
 const launcher = new Client();
 
-async function launchGame(username, sender, auth = null, memory = '4G', logCallback = null) {
+const instances = require('./instances');
+
+async function launchGame(username, sender, auth = null, memory = '4G', logCallback = null, instanceId = 'default') {
     // Load configuration from the manifest we just downloaded
     let manifest = {};
     try {
@@ -49,10 +51,30 @@ async function launchGame(username, sender, auth = null, memory = '4G', logCallb
         throw e; // Stop launch
     }
 
+    // Determine Game Directory based on Instance
+    let gameDirectory = GAME_ROOT; // Default
+    const selectedInstance = instances.find(i => i.id === instanceId);
+
+    if (selectedInstance && selectedInstance.gameDir) {
+        // If gameDir is absolute, use it; otherwise resolve relative to GAME_ROOT
+        if (path.isAbsolute(selectedInstance.gameDir)) {
+            gameDirectory = selectedInstance.gameDir;
+        } else {
+            gameDirectory = path.join(GAME_ROOT, selectedInstance.gameDir);
+        }
+
+        // Ensure directory exists
+        await fs.ensureDir(gameDirectory);
+    } else if (selectedInstance && selectedInstance.id !== 'default') {
+        // Fallback: use id as folder name
+        gameDirectory = path.join(GAME_ROOT, 'instances', selectedInstance.id);
+        await fs.ensureDir(gameDirectory);
+    }
+
     const opts = {
         clientPackage: null,
         authorization: auth || Promise.resolve(token),
-        root: GAME_ROOT,
+        root: GAME_ROOT, // Helper files (assets, libraries) remain shared
         javaPath: javaPath,
         version: {
             number: gameVersion,
@@ -65,7 +87,8 @@ async function launchGame(username, sender, auth = null, memory = '4G', logCallb
         overrides: {
             detached: false,
             checkFiles: true,
-            checkHash: true
+            checkHash: true,
+            gameDirectory: gameDirectory // Set the instance specific directory
         }
     };
 
@@ -104,8 +127,10 @@ async function launchGame(username, sender, auth = null, memory = '4G', logCallb
     };
 
     safeLog(`Lanzando Minecraft ${gameVersion} (${versionType})...`);
+    safeLog(`Instancia: ${selectedInstance ? selectedInstance.name : 'Default'}`);
+    safeLog(`Directorio de juego: ${gameDirectory}`);
     safeLog(`Usando Java en: ${javaPath}`);
-    safeLog(`Opciones de lanzamiento: ${JSON.stringify(opts, null, 2)}`);
+    // safeLog(`Opciones de lanzamiento: ${JSON.stringify(opts, null, 2)}`);
 
     // Progress of game files downloading (assets, jar, etc.)
     launcher.on('progress', (e) => {
@@ -113,10 +138,10 @@ async function launchGame(username, sender, auth = null, memory = '4G', logCallb
     });
 
     launcher.on('debug', (e) => {
-        safeLog(`[MC Debug] ${e}`);
-        fs.appendFileSync(path.join(GAME_ROOT, 'debug_log.txt'), e + '\n');
+        // safeLog(`[MC Debug] ${e}`); // Too verbose?
+        fs.appendFileSync(path.join(gameDirectory, 'debug_log.txt'), e + '\n'); // User instance dir for logs
         if (e.includes('Launching with arguments')) {
-            fs.writeFileSync(path.join(GAME_ROOT, 'launch_cmd.txt'), e);
+            fs.writeFileSync(path.join(gameDirectory, 'launch_cmd.txt'), e);
         }
     });
     launcher.on('data', (e) => safeLog(`[MC Salida] ${e}`));
@@ -129,7 +154,7 @@ async function launchGame(username, sender, auth = null, memory = '4G', logCallb
         safeSend('launch-close', e);
     });
 
-    await fs.writeJson(path.join(GAME_ROOT, 'launch_args.json'), opts, { spaces: 4 });
+    await fs.writeJson(path.join(gameDirectory, 'launch_args.json'), opts, { spaces: 4 });
     await launcher.launch(opts);
 }
 

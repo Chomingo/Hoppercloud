@@ -10,12 +10,6 @@ class GameUpdater extends EventEmitter {
     constructor() {
         super();
         this.gameRoot = GAME_ROOT;
-        this.configPath = path.join(this.gameRoot, 'launcher-config.json');
-        this.channels = {
-            master: 'https://raw.githubusercontent.com/Antaneyes/minecraft-launcher-custom/master/manifest.json',
-            beta: 'https://raw.githubusercontent.com/Antaneyes/minecraft-launcher-custom/dev/manifest.json'
-        };
-        this.defaultChannel = 'master';
         this.concurrencyLimit = 5;
         this.preservedFiles = ['options.txt', 'optionsof.txt', 'optionsshaders.txt', 'servers.dat'];
     }
@@ -33,61 +27,7 @@ class GameUpdater extends EventEmitter {
         return 0;
     }
 
-    async getChannel() {
-        try {
-            if (await fs.pathExists(this.configPath)) {
-                const config = await fs.readJson(this.configPath);
-                if (config.channel && this.channels[config.channel]) {
-                    return config.channel;
-                }
-            }
-        } catch (e) {
-            console.error('Error reading config for channel:', e);
-        }
-        return this.defaultChannel;
-    }
-
-    async setChannel(channel) {
-        if (!this.channels[channel]) {
-            throw new Error(`Canal inválido: ${channel}`);
-        }
-
-        let config = {};
-        try {
-            if (await fs.pathExists(this.configPath)) {
-                config = await fs.readJson(this.configPath);
-            }
-        } catch (e) {
-            // Ignore error, start with empty config
-        }
-
-        config.channel = channel;
-        // Remove explicit updateUrl if setting a standard channel to avoid conflicts
-        delete config.updateUrl;
-
-        await fs.ensureDir(this.gameRoot);
-        await fs.writeJson(this.configPath, config, { spaces: 4 });
-        this.emit('log', `Canal de actualización cambiado a: ${channel}`);
-    }
-
-    async getUpdateUrl() {
-        try {
-            if (await fs.pathExists(this.configPath)) {
-                const config = await fs.readJson(this.configPath);
-
-                // If specific updateUrl is set (legacy or custom), use it
-                if (config.updateUrl) return config.updateUrl;
-
-                // Check for channel
-                if (config.channel && this.channels[config.channel]) {
-                    return this.channels[config.channel];
-                }
-            }
-        } catch (e) {
-            console.error('Error reading config:', e);
-        }
-        return this.channels[this.defaultChannel];
-    }
+    // Removed getChannel/setChannel/getUpdateUrl as we now use dynamic branches passed via IPC
 
     async calculateHash(filePath) {
         return new Promise((resolve, reject) => {
@@ -99,36 +39,29 @@ class GameUpdater extends EventEmitter {
         });
     }
 
-    async checkAndDownloadUpdates() {
+    /**
+     * @param {string} targetGameDir - Directory where updates should be applied
+     * @param {string} manifestUrl - Full URL to the manifest.json
+     */
+    async checkAndDownloadUpdates(targetGameDir = this.gameRoot, manifestUrl) {
         try {
-            await fs.ensureDir(this.gameRoot);
+            await fs.ensureDir(targetGameDir);
         } catch (e) {
             throw new Error(`No se pudo crear el directorio del juego: ${e.message}`);
         }
 
-        let updateUrl;
-        try {
-            updateUrl = await this.getUpdateUrl();
-            this.emit('log', `Buscando actualizaciones en: ${updateUrl}`);
-        } catch (e) {
-            this.emit('log', 'Error obteniendo URL de actualización. Usando predeterminada.');
-            updateUrl = this.defaultUpdateUrl;
+        // Use defaults if not provided (fallback)
+        if (!manifestUrl) {
+            manifestUrl = 'https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/manifest.json';
         }
+
+        this.emit('log', `Buscando actualizaciones en: ${manifestUrl}`);
 
         let manifest;
 
-        // DEV MODE: Read local manifest
-        if (!app.isPackaged) {
-            const localManifestPath = path.join(__dirname, '..', 'manifest.json');
-            if (await fs.pathExists(localManifestPath)) {
-                this.emit('log', 'MODO DEV: Usando manifest.json local.');
-                try {
-                    manifest = await fs.readJson(localManifestPath);
-                } catch (e) {
-                    this.emit('error', `Error leyendo manifest local: ${e.message}`);
-                    return;
-                }
-            }
+        // DEV MODE: Read local manifest if no URL (or if explicitly disabled, but keeping simple for now)
+        if (!app.isPackaged && branch === 'local') {
+            // Logic for local testing if needed
         }
 
         if (!manifest) {
@@ -138,6 +71,8 @@ class GameUpdater extends EventEmitter {
             } catch (e) {
                 if (e.code === 'ENOTFOUND' || e.code === 'ETIMEDOUT') {
                     this.emit('log', 'No se pudo conectar al servidor de actualizaciones (Sin internet o servidor caído).');
+                } else if (e.response && e.response.status === 404) {
+                    this.emit('log', `Error 404: No se encontró el manifest en la rama '${branch}'. Asegúrate de que existe.`);
                 } else {
                     this.emit('log', `Error descargando manifiesto: ${e.message}`);
                 }
@@ -155,19 +90,19 @@ class GameUpdater extends EventEmitter {
 
         if (manifest.files && Array.isArray(manifest.files)) {
             try {
-                await this.cleanupOldMods(manifest);
+                await this.cleanupOldMods(manifest, targetGameDir);
             } catch (e) {
                 this.emit('log', `Advertencia: Fallo al limpiar mods antiguos: ${e.message}`);
             }
 
             try {
-                await this.downloadFiles(manifest);
+                await this.downloadFiles(manifest, targetGameDir);
             } catch (e) {
                 throw new Error(`Fallo durante la descarga de archivos: ${e.message}`);
             }
 
             try {
-                await this.patchFabric(manifest);
+                await this.patchFabric(manifest); // Shared logic, usually installs to global versions default
             } catch (e) {
                 throw new Error(`Fallo al instalar/parchear Fabric: ${e.message}`);
             }
@@ -175,21 +110,21 @@ class GameUpdater extends EventEmitter {
             this.emit('log', 'Todas las actualizaciones descargadas.');
 
             try {
-                await fs.writeJson(path.join(this.gameRoot, 'client-manifest.json'), manifest);
+                await fs.writeJson(path.join(targetGameDir, 'client-manifest.json'), manifest);
             } catch (e) {
                 this.emit('log', `Advertencia: No se pudo guardar client-manifest.json: ${e.message}`);
             }
         }
     }
 
-    async cleanupOldMods(manifest) {
-        const adminFile = path.join(this.gameRoot, '.admin');
+    async cleanupOldMods(manifest, targetGameDir) {
+        const adminFile = path.join(targetGameDir, '.admin');
         if (await fs.pathExists(adminFile)) {
             this.emit('log', 'MODO ADMIN DETECTADO: Saltando limpieza de mods antiguos.');
             return;
         }
 
-        const modsDir = path.join(this.gameRoot, 'mods');
+        const modsDir = path.join(targetGameDir, 'mods');
         if (await fs.pathExists(modsDir)) {
             const localMods = await fs.readdir(modsDir);
             const manifestModNames = manifest.files
@@ -205,13 +140,14 @@ class GameUpdater extends EventEmitter {
         }
     }
 
-    async downloadFiles(manifest) {
+    async downloadFiles(manifest, targetGameDir) {
         let processed = 0;
         const total = manifest.files.length;
 
         const downloadFile = async (file) => {
-            const destPath = path.join(this.gameRoot, file.path);
+            const destPath = path.join(targetGameDir, file.path);
             const fileName = path.basename(file.path);
+
 
             if (this.preservedFiles.includes(fileName) && await fs.pathExists(destPath)) {
                 this.emit('log', `Conservando archivo de usuario: ${fileName}`);
