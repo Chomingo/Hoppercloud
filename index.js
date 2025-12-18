@@ -81,16 +81,6 @@ app.on('activate', () => {
     }
 });
 
-// IPC Handlers
-ipcMain.handle('get-update-channel', async () => {
-    return 'master'; // Fallback
-});
-
-ipcMain.handle('set-update-channel', async (event, channel) => {
-    // Logic removed as per new multi-instance branch system
-    return true;
-});
-
 // Instances
 const instances = require('./utils/instances');
 

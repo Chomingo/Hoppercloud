@@ -134,28 +134,12 @@ const closeSettingsBtn = document.getElementById('close-settings-btn');
 const settingsOverlay = document.getElementById('settings-overlay');
 const ramSlider = document.getElementById('ram-slider');
 const ramValue = document.getElementById('ram-value');
-const channelSelect = document.getElementById('channel-select');
 
 // Load saved RAM
 const savedRam = localStorage.getItem('savedRam') || '4';
 if (ramSlider && ramValue) {
     ramSlider.value = savedRam;
     ramValue.textContent = `${savedRam} GB`;
-}
-
-// Load current channel (Dummy/Compatibility)
-ipcRenderer.invoke('get-update-channel').then(channel => {
-    if (channelSelect) {
-        channelSelect.value = channel;
-    }
-});
-
-if (channelSelect) {
-    channelSelect.addEventListener('change', async (e) => {
-        const newChannel = e.target.value;
-        await ipcRenderer.invoke('set-update-channel', newChannel);
-        log(`Canal cambiado a: ${newChannel}. Reinicia para aplicar cambios.`);
-    });
 }
 
 if (settingsBtn) {
