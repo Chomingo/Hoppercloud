@@ -1,5 +1,5 @@
 {
-    "version": "2025.12.07",
+    "version": "2025.12.18",
     "gameVersion": "fabric-loader-0.17.2-1.21.9",
     "launcherVersion": "1.1.1",
     "launcherUrl": "https://github.com/Chomingo/Hoppercloud/releases/download/v1.1.1/hoppersetup-1.1.1.exe",
@@ -33,18 +33,6 @@
             "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/modmenu-16.0.0-rc.1.jar",
             "sha1": "c927187d11cb6db2d3daad2a24899f1a70a1618f",
             "size": 1077403
-        },
-        {
-            "path": "mods/PuzzlesLib-v21.9.5+mc1.21.9-Fabric.jar",
-            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/PuzzlesLib-v21.9.5+mc1.21.9-Fabric.jar",
-            "sha1": "e52149f737f545f3d6ff195f3ea3c47f6760ed8d",
-            "size": 1075938
-        },
-        {
-            "path": "mods/RoughlyEnoughItems-21.9.9999-fabric.jar",
-            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/RoughlyEnoughItems-21.9.9999-fabric.jar",
-            "sha1": "e420e7e74f41962cec5e8a4800b54c8f14c4e12a",
-            "size": 2463650
         },
         {
             "path": "mods/sodium-fabric-0.7.3+mc1.21.10.jar",
