@@ -1,5 +1,7 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
+const fs = require('fs-extra');
+const { GAME_ROOT } = require('./utils/constants');
 const { autoUpdater } = require('electron-updater');
 
 // Parse command line arguments
@@ -92,7 +94,9 @@ async function loadInstances() {
         // 1. Try to fetch from remote
         log.info('Cargando perfiles desde GitHub...');
         const axios = require('axios');
-        const response = await axios.get(`${REMOTE_INSTANCES_URL}?t=${Date.now()}`);
+        const response = await axios.get(`${REMOTE_INSTANCES_URL}?t=${Date.now()}`, {
+            timeout: 5000 // 5 second timeout
+        });
         instances = response.data;
 
         // Save to cache
@@ -231,9 +235,7 @@ ipcMain.on('launch-game', async (event, { username, mode, memory, instanceId }) 
     }
 });
 
-const { shell } = require('electron');
-const { GAME_ROOT } = require('./utils/constants');
-const fs = require('fs-extra');
+// (Moved to top)
 
 ipcMain.on('open-mods-folder', async (event, relativePath) => {
     try {
