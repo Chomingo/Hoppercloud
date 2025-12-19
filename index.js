@@ -81,8 +81,58 @@ app.on('activate', () => {
     }
 });
 
-// Instances
-const instances = require('./utils/instances');
+// Instances & Remote Config
+const INSTANCES_CACHE_PATH = path.join(GAME_ROOT, 'launcher_instances.json');
+const REMOTE_INSTANCES_URL = 'https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/remote_instances.json';
+
+let instances = [];
+
+async function loadInstances() {
+    try {
+        // 1. Try to fetch from remote
+        log.info('Cargando perfiles desde GitHub...');
+        const axios = require('axios');
+        const response = await axios.get(`${REMOTE_INSTANCES_URL}?t=${Date.now()}`);
+        instances = response.data;
+
+        // Save to cache
+        await fs.writeJson(INSTANCES_CACHE_PATH, instances);
+        log.info('Perfiles actualizados y guardados en caché.');
+    } catch (error) {
+        log.error(`Error cargando perfiles remotos: ${error.message}`);
+
+        // 2. Fallback to cache
+        if (await fs.pathExists(INSTANCES_CACHE_PATH)) {
+            log.info('Usando perfiles guardados en caché local.');
+            instances = await fs.readJson(INSTANCES_CACHE_PATH);
+        } else {
+            // 3. Fallback to hardcoded defaults (utils/instances.js)
+            log.info('Usando perfiles predeterminados.');
+            try {
+                instances = require('./utils/instances');
+            } catch (e) {
+                instances = [{
+                    id: 'default',
+                    name: 'Principal',
+                    icon: 'assets/icon_default.png',
+                    description: 'Instancia Principal',
+                    modsDir: 'mods',
+                    enabled: true,
+                    manifestUrl: 'https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/manifest.json'
+                }];
+            }
+        }
+    }
+    return instances;
+}
+
+// IPC Handlers
+ipcMain.handle('get-instances', async () => {
+    if (instances.length === 0) {
+        return await loadInstances();
+    }
+    return instances;
+});
 
 ipcMain.on('check-updates', async (event, { instanceId } = {}) => {
     const sender = event.sender;
@@ -104,6 +154,9 @@ ipcMain.on('check-updates', async (event, { instanceId } = {}) => {
 
     try {
         sender.send('status', 'Buscando Actualizaciones');
+
+        // Ensure instances are loaded
+        if (instances.length === 0) await loadInstances();
 
         // Resolve Instance
         const selectedInstance = instances.find(i => i.id === instanceId) || instances[0];

@@ -2,14 +2,27 @@
 const { ipcRenderer, shell } = require('electron');
 const path = require('path');
 
-// Load Instances
+// Global State
 let instances = [];
 let selectedInstance = null;
 
-try {
-    instances = require('../utils/instances');
-    // Ensure at least one instance exists or fallback to default
-    if (!instances || instances.length === 0) {
+// Load Instances Asynchronously
+async function initInstances() {
+    try {
+        instances = await ipcRenderer.invoke('get-instances');
+
+        // Select first enabled instance by default
+        selectedInstance = instances.find(i => i.enabled) || instances[0];
+
+        // Initialize UI
+        renderSidebar();
+        updateInstanceUI();
+
+        // Start updates immediately
+        triggerUpdate(selectedInstance ? selectedInstance.id : 'default');
+    } catch (e) {
+        console.error('Error loading instances:', e);
+        // Fallback or show error UI
         instances = [{
             id: 'default',
             name: 'Principal',
@@ -19,22 +32,11 @@ try {
             enabled: true,
             manifestUrl: 'https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/manifest.json'
         }];
+        selectedInstance = instances[0];
+        renderSidebar();
+        updateInstanceUI();
     }
-} catch (e) {
-    console.error('Error loading instances:', e);
-    instances = [{
-        id: 'default',
-        name: 'Principal',
-        icon: 'assets/icon_default.png',
-        description: 'Instancia Principal',
-        modsDir: 'mods',
-        enabled: true,
-        manifestUrl: 'https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/manifest.json'
-    }];
 }
-
-// Select first enabled instance by default
-selectedInstance = instances.find(i => i.enabled) || instances[0];
 
 const launchBtn = document.getElementById('launch-btn');
 const usernameInput = document.getElementById('username');
@@ -109,9 +111,7 @@ function triggerUpdate(instanceId) {
     ipcRenderer.send('check-updates', { instanceId });
 }
 
-// Initialize UI
-renderSidebar();
-updateInstanceUI();
+// (Initialization moved to initInstances)
 
 // Load saved username
 const savedUsername = localStorage.getItem('savedUsername');
@@ -383,5 +383,5 @@ ipcRenderer.on('launcher-update-ready', () => {
     log('Actualización del launcher lista. Haz clic en el botón para reiniciar.');
 });
 
-// Start updates immediately
-triggerUpdate(selectedInstance ? selectedInstance.id : 'default');
+// Start initialization
+initInstances();

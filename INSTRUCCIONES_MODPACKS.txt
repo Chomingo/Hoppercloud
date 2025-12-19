@@ -1,0 +1,59 @@
+# GUÍA DE GESTIÓN DE MODPACKS (PERFILES) POR RAMAS
+
+Este launcher utiliza un sistema de "Ramas de Git" para separar los modpacks. Cada perfil que ves en la barra lateral del launcher apunta a una rama diferente en tu GitHub.
+
+## 1. EL CONCEPTO CLAVE
+- Rama MASTER = Perfil Principal
+- Rama ADVENTURE-BRANCH = Perfil Aventura
+- Rama TECH-DEV = Perfil Técnico
+- Rama DEV = Perfil Beta / Desarrollo
+
+Cada rama tiene su PROPIA copia de la carpeta 'update_files/mods' y su propio 'manifest.json'.
+
+---
+
+## 2. FLUJO DE TRABAJO (PASO A PASO)
+
+Si quieres añadir un mod SOLO al perfil DEV:
+
+1.  **CAMBIAR DE RAMA**:
+    Abre la terminal y entra en la rama correspondiente:
+    > git checkout dev
+
+2.  **PREPARAR ARCHIVOS**:
+    Copia tus nuevos mods (.jar) dentro de:
+    > update_files/mods/
+
+3.  **ACTUALIZAR EL MAPA (MANIFEST)**:
+    Ejecuta el script para que el launcher sepa que hay nuevos mods en esta rama:
+    > node generate_manifest.js
+
+4.  **GUARDAR Y SUBIR**:
+    Sube los cambios SOLO a esa rama de GitHub:
+    > git add .
+    > git commit -m "Añadidos mods para el perfil Dev"
+    > git push origin dev
+
+---
+
+## 3. PREGUNTAS FRECUENTES (EXPLICACIÓN EXTRA)
+
+### ¿Por qué no se mezclan los mods?
+Porque Git es como un "universo paralelo". Cuando estás en la rama 'dev', Git oculta los archivos de 'master' y te muestra solo los de 'dev'. El launcher, al estar configurado para leer de la URL de 'dev', solo ve lo que hay en esa rama.
+
+### ¿Qué pasa si quiero que un mod esté en TODOS los perfiles?
+Tendrías que hacer el proceso en cada rama, o añadirlo en 'master' y luego usar el comando 'git merge master' estando dentro de las otras ramas. 
+*Cuidado:* El merge copia TODO (borrados y añadidos), así que úsalo solo si quieres que las ramas sean iguales.
+
+### ¿Cómo borro un mod de un solo perfil?
+1. Entras en la rama (ej: git checkout adventure-branch).
+2. Borras el archivo de 'update_files/mods/'.
+3. Ejecutas 'node generate_manifest.js'.
+4. Haces el push (git push origin adventure-branch).
+
+---
+
+## 4. COMANDOS ÚTILES
+- 'git branch': Te dice en qué rama estás ahora (aparece con un asterisco *).
+- 'git checkout master': Vuelve al perfil principal.
+- 'git status': Te dice si tienes archivos nuevos sin guardar.
