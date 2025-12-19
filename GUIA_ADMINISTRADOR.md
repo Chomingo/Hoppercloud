@@ -85,6 +85,10 @@ Ya no necesitas crear un `.exe` nuevo para quitar o poner iconos en la barra lat
 - **Causa**: Casi siempre es un mod incompatible o que le falta una dependencia.
 - **Solución**: Revisa la consola del launcher (icono superior derecho `>_`). Te dirá qué mod está fallando. Elimínalo de `update_files/mods`, genera el manifest y haz push.
 
+### "Error: Cannot create symbolic link" al compilar
+- **Causa**: Windows bloquea la creación de enlaces simbólicos necesarios para la compilación.
+- **Solución**: Abre la terminal como **Administrador** o activa el **Modo Desarrollador** en la configuración de Windows (Privacidad y seguridad > Para desarrolladores).
+
 ### "No veo los cambios en el launcher"
 - **Causa**: El launcher tiene una caché local.
 - **Solución**: Cierra y vuelve a abrir el launcher. Si persiste, despliega la consola y verifica que el enlace a GitHub (`remote_instances.json`) no tenga errores 404.
