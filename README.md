@@ -39,4 +39,6 @@ Este script automatiza el versionado, compilación y creación de la Release en 
 
 ## Documentación
 
-Para una guía detallada sobre cómo configurar y desplegar actualizaciones, visita la [Wiki del Proyecto](https://github.com/Antaneyes/minecraft-launcher-custom/wiki/Gu%C3%ADa-de-Configuraci%C3%B3n-y-Despliegue).
+- [📘 Guía del Administrador (Comandos y Actualizaciones)](GUIA_ADMINISTRADOR.md)
+- [📜 Instrucciones rápidas para Modpacks](INSTRUCCIONES_MODPACKS.txt)
+- [🏗️ Plan de Implementación de Perfiles Dinámicos](C:\Users\Admin\.gemini\antigravity\brain\f6ecf175-8984-4720-aa6e-f4175163d9ec\implementation_plan.md)
