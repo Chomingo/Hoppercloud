@@ -1,6 +1,7 @@
 /* eslint-env browser */
 const { ipcRenderer, shell } = require('electron');
 const path = require('path');
+const skinview3d = require('skinview3d');
 
 // Global State
 let instances = [];
