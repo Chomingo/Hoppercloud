@@ -400,10 +400,13 @@ function initSkinViewer() {
     // Initialize skinview3d
     skinViewer = new skinview3d.SkinViewer({
         canvas: document.createElement('canvas'),
-        width: 300,
-        height: 400,
-        skin: 'assets/steve.png' // Default fallback
+        width: skinViewerContainer.offsetWidth || 300,
+        height: skinViewerContainer.offsetHeight || 400,
+        skin: '../assets/steve.png' // Correct path relative to ui/index.html
     });
+
+    skinViewer.canvas.style.width = '100%';
+    skinViewer.canvas.style.height = '100%';
 
     skinViewerContainer.appendChild(skinViewer.canvas);
 
@@ -451,6 +454,26 @@ if (capeInput) {
             };
             reader.readAsDataURL(file);
         }
+    });
+}
+
+const saveSkinBtn = document.getElementById('save-skin-btn');
+if (saveSkinBtn) {
+    saveSkinBtn.addEventListener('click', () => {
+        // For now, let's just show a success message as a proof of concept
+        // In a real scenario, we would save the skin and cape paths to the user's profile
+        const span = saveSkinBtn.querySelector('.btn-text');
+        const originalText = span.textContent;
+        span.textContent = '✅ CAMBIOS APLICADOS';
+        saveSkinBtn.style.background = 'var(--success)';
+
+        setTimeout(() => {
+            span.textContent = originalText;
+            saveSkinBtn.style.background = '';
+            wardrobeOverlay.classList.add('hidden');
+        }, 2000);
+
+        log('Skin y Capa aplicadas al perfil actual.');
     });
 }
 

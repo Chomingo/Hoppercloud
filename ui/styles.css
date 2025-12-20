@@ -549,8 +549,10 @@ header {
 
 main {
     flex: 1;
-    overflow-y: auto; /* Allow scrolling if content is tall */
-    display: flex; /* Keep centering */
+    overflow-y: auto;
+    /* Allow scrolling if content is tall */
+    display: flex;
+    /* Keep centering */
 }
 
 /* Instance Badge */
@@ -623,3 +625,27 @@ main {
     filter: brightness(1.2);
 }
 
+/* Custom File Upload Button */
+.custom-file-upload {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: block;
+    padding: 12px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    transition: all 0.2s;
+    margin-top: 5px;
+}
+
+.custom-file-upload:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent);
+}
+
+.custom-file-upload input[type="file"] {
+    display: none;
+}
