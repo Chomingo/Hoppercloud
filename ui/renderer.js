@@ -1,7 +1,7 @@
 /* eslint-env browser */
 const { ipcRenderer, shell } = require('electron');
 const path = require('path');
-const skinview3d = require('skinview3d');
+// No top-level require for skinview3d to avoid startup crashes
 
 // Global State
 let instances = [];
@@ -404,6 +404,9 @@ function initSkinViewer() {
     }
 
     try {
+        // Carga diferida de la librería
+        const skinview3d = require('skinview3d');
+
         skinViewerContainer.innerHTML = ''; // Limpiar el contenedor
 
         // Crear el visualizador con el contenedor existente directamente
@@ -432,6 +435,7 @@ function initSkinViewer() {
         skinViewerContainer.innerHTML = `<div style="color: #ff4d4d; padding: 20px;">Error al activar el 3D: ${err.message}</div>`;
     }
 }
+
 
 if (wardrobeBtn) {
     wardrobeBtn.addEventListener('click', () => {
