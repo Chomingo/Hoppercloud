@@ -395,27 +395,46 @@ const skinViewerContainer = document.getElementById('skin-viewer-container');
 let skinViewer = null;
 
 function initSkinViewer() {
-    if (skinViewer) return;
+    console.log('--- Iniciando Ropero 3D ---');
+    if (!window.skinview3d) {
+        console.error('ERROR: La librería skinview3d no se ha cargado.');
+        skinViewerContainer.innerHTML = '<div style="color: #ff4d4d; padding: 20px; text-align: center;">Error: No se pudo cargar la librería 3D. Verifica tu conexión a internet.</div>';
+        return;
+    }
 
-    // Initialize skinview3d
-    skinViewer = new skinview3d.SkinViewer({
-        canvas: document.createElement('canvas'),
-        width: skinViewerContainer.offsetWidth || 300,
-        height: skinViewerContainer.offsetHeight || 400,
-        skin: '../assets/steve.png' // Correct path relative to ui/index.html
-    });
+    if (skinViewer) {
+        console.log('El visualizador ya está inicializado.');
+        return;
+    }
 
-    skinViewer.canvas.style.width = '100%';
-    skinViewer.canvas.style.height = '100%';
+    try {
+        skinViewerContainer.innerHTML = ''; // Limpiar el contenedor
 
-    skinViewerContainer.appendChild(skinViewer.canvas);
+        // Crear el visualizador con el contenedor existente directamente
+        skinViewer = new skinview3d.SkinViewer({
+            container: skinViewerContainer,
+            width: 450, // Dimensiones fijas para asegurar renderizado
+            height: 400,
+            skin: '../assets/steve.png'
+        });
 
-    // Auto-rotate character
-    skinViewer.autoRotate = true;
-    skinViewer.autoRotateSpeed = 0.5;
+        console.log('Visualizador instanciado correctamente.');
 
-    // Animation
-    skinViewer.animation = new skinview3d.WalkingAnimation();
+        // Ajustes del modelo
+        skinViewer.autoRotate = true;
+        skinViewer.autoRotateSpeed = 0.6;
+        skinViewer.animation = new skinview3d.WalkingAnimation();
+
+        // Hacer que la cámara sea interactiva
+        skinViewer.controls.enableZoom = true;
+        skinViewer.controls.enableRotate = true;
+
+        console.log('Animaciones y controles activados.');
+
+    } catch (err) {
+        console.error('Error al instanciar skinview3d:', err);
+        skinViewerContainer.innerHTML = `<div style="color: #ff4d4d; padding: 20px;">Error al activar el 3D: ${err.message}</div>`;
+    }
 }
 
 if (wardrobeBtn) {
