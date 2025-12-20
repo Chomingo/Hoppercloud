@@ -15,7 +15,7 @@ module.exports = [
         description: 'Pack de Mods de Aventura',
         modsDir: 'instances/adventure/mods',
         gameDir: 'instances/adventure',
-        enabled: false,
+        enabled: true,
         manifestUrl: 'https://raw.githubusercontent.com/Chomingo/Hoppercloud/adventure-branch/manifest.json'
     },
     {
@@ -25,7 +25,7 @@ module.exports = [
         description: 'Pack de Mods Técnicos',
         modsDir: 'instances/tech/mods',
         gameDir: 'instances/tech',
-        enabled: false,
+        enabled: true,
         manifestUrl: 'https://raw.githubusercontent.com/Chomingo/Hoppercloud/tech-dev/manifest.json'
     },
     {

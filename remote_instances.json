@@ -11,7 +11,7 @@
     {
         "id": "instance_2",
         "name": "Modpack Aventura",
-        "icon": "assets/icon.png",
+        "icon": "assets/icon_adventure.png",
         "description": "Pack de Mods de Aventura",
         "modsDir": "instances/adventure/mods",
         "gameDir": "instances/adventure",
@@ -21,7 +21,7 @@
     {
         "id": "instance_3",
         "name": "Modpack Técnico",
-        "icon": "assets/icon.png",
+        "icon": "assets/icon_tech.png",
         "description": "Pack de Mods Técnicos",
         "modsDir": "instances/tech/mods",
         "gameDir": "instances/tech",
@@ -31,7 +31,7 @@
     {
         "id": "instance_dev",
         "name": "Beta / Desarrollo",
-        "icon": "assets/icon.png",
+        "icon": "assets/icon_dev.png",
         "description": "Prueba las últimas novedades aquí",
         "modsDir": "instances/dev/mods",
         "gameDir": "instances/dev",
