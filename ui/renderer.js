@@ -397,11 +397,6 @@ let skinViewer = null;
 
 function initSkinViewer() {
     console.log('--- Iniciando Ropero 3D ---');
-    if (!window.skinview3d) {
-        console.error('ERROR: La librería skinview3d no se ha cargado.');
-        skinViewerContainer.innerHTML = '<div style="color: #ff4d4d; padding: 20px; text-align: center;">Error: No se pudo cargar la librería 3D. Verifica tu conexión a internet.</div>';
-        return;
-    }
 
     if (skinViewer) {
         console.log('El visualizador ya está inicializado.');
@@ -416,7 +411,7 @@ function initSkinViewer() {
             container: skinViewerContainer,
             width: 450, // Dimensiones fijas para asegurar renderizado
             height: 400,
-            skin: '../assets/steve.png'
+            skin: path.join(__dirname, '..', 'assets', 'steve.png')
         });
 
         console.log('Visualizador instanciado correctamente.');
