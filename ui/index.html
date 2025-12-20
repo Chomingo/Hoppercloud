@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hopper Launcher</title>
+    <!-- Skin Viewer Library -->
+    <script src="https://cdn.jsdelivr.net/npm/skinview3d@3.0.0/dist/skinview3d.bundle.js"></script>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,6 +26,13 @@
                 <h1>HopperLauncher</h1>
                 <div class="header-controls">
                     <div id="status-badge" class="badge">Listo</div>
+                    <button id="wardrobe-btn" class="console-toggle-btn" title="Ropero (Skins y Capas)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 1.89V6.5a.5.5 0 0 0 .5.5H5v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7h2.25a.5.5 0 0 0 .5-.5V5.35a2 2 0 0 0-1.37-1.89ZM12 4a2 2 0 1 0-2-2 2 2 0 0 0 2 2ZM17 20H7V7h10Z" />
+                        </svg>
+                    </button>
                     <button id="settings-btn" class="console-toggle-btn" title="Configuración"
                         style="margin-right: 0.5rem;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -133,6 +142,31 @@
                 </div>
             </div>
         </div>
+
+        <!-- Wardrobe Overlay -->
+        <div id="wardrobe-overlay" class="settings-overlay hidden">
+            <div class="settings-modal" style="max-width: 800px; height: 80vh;">
+                <div class="settings-header">
+                    <h3>🧺 Ropero Real</h3>
+                    <button id="close-wardrobe-btn" class="close-btn">✕</button>
+                </div>
+                <div class="wardrobe-content">
+                    <div class="wardrobe-controls">
+                        <div class="setting-item">
+                            <label>Skin (.png)</label>
+                            <input type="file" id="skin-input" accept=".png" class="file-input">
+                        </div>
+                        <div class="setting-item">
+                            <label>Capa (.png)</label>
+                            <input type="file" id="cape-input" accept=".png" class="file-input">
+                        </div>
+                        <p class="setting-desc">Arrastra el 3D para rotarlo.</p>
+                    </div>
+                    <div id="skin-viewer-container"></div>
+                </div>
+            </div>
+        </div>
+
         <script src="renderer.js"></script>
 </body>
 

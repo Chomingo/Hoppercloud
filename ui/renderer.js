@@ -383,5 +383,76 @@ ipcRenderer.on('launcher-update-ready', () => {
     log('Actualización del launcher lista. Haz clic en el botón para reiniciar.');
 });
 
+
+// --- Wardrobe / Skin System ---
+const wardrobeBtn = document.getElementById('wardrobe-btn');
+const wardrobeOverlay = document.getElementById('wardrobe-overlay');
+const closeWardrobeBtn = document.getElementById('close-wardrobe-btn');
+const skinInput = document.getElementById('skin-input');
+const capeInput = document.getElementById('cape-input');
+const skinViewerContainer = document.getElementById('skin-viewer-container');
+
+let skinViewer = null;
+
+function initSkinViewer() {
+    if (skinViewer) return;
+
+    // Initialize skinview3d
+    skinViewer = new skinview3d.SkinViewer({
+        canvas: document.createElement('canvas'),
+        width: 300,
+        height: 400,
+        skin: 'assets/steve.png' // Default fallback
+    });
+
+    skinViewerContainer.appendChild(skinViewer.canvas);
+
+    // Auto-rotate character
+    skinViewer.autoRotate = true;
+    skinViewer.autoRotateSpeed = 0.5;
+
+    // Animation
+    skinViewer.animation = new skinview3d.WalkingAnimation();
+}
+
+if (wardrobeBtn) {
+    wardrobeBtn.addEventListener('click', () => {
+        wardrobeOverlay.classList.remove('hidden');
+        initSkinViewer();
+    });
+}
+
+if (closeWardrobeBtn) {
+    closeWardrobeBtn.addEventListener('click', () => {
+        wardrobeOverlay.classList.add('hidden');
+    });
+}
+
+if (skinInput) {
+    skinInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                skinViewer.loadSkin(event.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+if (capeInput) {
+    capeInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                skinViewer.loadCape(event.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
 // Start initialization
 initInstances();
