@@ -55,7 +55,8 @@ function createWindow() {
             contextIsolation: false
         },
         backgroundColor: '#121212',
-        resizable: true
+        resizable: true,
+        icon: path.join(__dirname, 'assets', 'icon.png')
     });
 
     mainWindow.loadFile(path.join(__dirname, 'ui', 'index.html'));

@@ -22,11 +22,13 @@
     ],
     "win": {
       "target": "nsis",
-      "artifactName": "hoppersetup-${version}.${ext}"
+      "artifactName": "hoppersetup-${version}.${ext}",
+      "icon": "assets/icon.png"
     },
     "files": [
       "ui/**/*",
       "utils/**/*",
+      "assets/**/*",
       "index.js",
       "package.json"
     ]

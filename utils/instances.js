@@ -2,7 +2,7 @@ module.exports = [
     {
         id: 'default',
         name: 'Principal',
-        icon: 'assets/icon_default.png',
+        icon: 'assets/icon.png',
         description: 'Instancia Principal',
         modsDir: 'mods',
         enabled: true,
