@@ -10,8 +10,9 @@ class GameUpdater extends EventEmitter {
     constructor() {
         super();
         this.gameRoot = GAME_ROOT;
-        this.concurrencyLimit = 5;
+        this.concurrencyLimit = 10;
         this.preservedFiles = ['options.txt', 'optionsof.txt', 'optionsshaders.txt', 'servers.dat'];
+        this.localManifest = null;
     }
 
     static compareVersions(v1, v2) {
@@ -56,6 +57,16 @@ class GameUpdater extends EventEmitter {
         }
 
         this.emit('log', `Buscando actualizaciones en: ${manifestUrl}`);
+
+        // Load local manifest for caching
+        try {
+            const localManifestPath = path.join(targetGameDir, 'client-manifest.json');
+            if (await fs.pathExists(localManifestPath)) {
+                this.localManifest = await fs.readJson(localManifestPath);
+            }
+        } catch (e) {
+            this.localManifest = null;
+        }
 
         let manifest;
 
@@ -134,7 +145,23 @@ class GameUpdater extends EventEmitter {
             for (const file of localMods) {
                 if (!manifestModNames.includes(file)) {
                     this.emit('log', `Eliminando mod antiguo: ${file}`);
-                    await fs.remove(path.join(modsDir, file));
+                    const filePath = path.join(modsDir, file);
+                    await this.retryOperation(() => fs.remove(filePath));
+                }
+            }
+        }
+    }
+
+    async retryOperation(operation, maxRetries = 3, delay = 1000) {
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                return await operation();
+            } catch (err) {
+                if (err.code === 'EBUSY' && i < maxRetries - 1) {
+                    this.emit('log', `Archivo ocupado, reintentando en ${delay}ms... (Intento ${i + 1}/${maxRetries})`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                } else {
+                    throw err;
                 }
             }
         }
@@ -145,58 +172,80 @@ class GameUpdater extends EventEmitter {
         const total = manifest.files.length;
 
         const downloadFile = async (file) => {
-            const destPath = path.join(targetGameDir, file.path);
-            const fileName = path.basename(file.path);
+            try {
+                const destPath = path.join(targetGameDir, file.path);
+                const fileName = path.basename(file.path);
 
 
-            if (this.preservedFiles.includes(fileName) && await fs.pathExists(destPath)) {
-                this.emit('log', `Conservando archivo de usuario: ${fileName}`);
-                processed++;
-                this.emit('progress', { current: processed, total, type: 'update' });
-                return;
-            }
-
-            // DEV MODE: Copy from local
-            if (!app.isPackaged) {
-                const localSourcePath = path.join(__dirname, '..', 'update_files', file.path);
-                if (await fs.pathExists(localSourcePath)) {
-                    this.emit('log', `[DEV] Copiando localmente: ${file.path}`);
-                    await fs.ensureDir(path.dirname(destPath));
-                    await fs.copy(localSourcePath, destPath);
+                if (this.preservedFiles.includes(fileName) && await fs.pathExists(destPath)) {
+                    this.emit('log', `Conservando archivo de usuario: ${fileName}`);
                     processed++;
                     this.emit('progress', { current: processed, total, type: 'update' });
                     return;
                 }
-            }
 
-            // Check existing file
-            if (await fs.pathExists(destPath)) {
-                if (file.sha1) {
-                    const localHash = await this.calculateHash(destPath);
-                    if (localHash === file.sha1) {
+                // DEV MODE: Copy from local
+                if (!app.isPackaged) {
+                    const localSourcePath = path.join(__dirname, '..', 'update_files', file.path);
+                    if (await fs.pathExists(localSourcePath)) {
+                        this.emit('log', `[DEV] Copiando localmente: ${file.path}`);
+                        await fs.ensureDir(path.dirname(destPath));
+                        await this.retryOperation(() => fs.copy(localSourcePath, destPath));
                         processed++;
                         this.emit('progress', { current: processed, total, type: 'update' });
                         return;
                     }
                 }
-            }
 
-            this.emit('log', `Descargando: ${file.path}`);
-            await fs.ensureDir(path.dirname(destPath));
+                // Check existing file
+                if (await fs.pathExists(destPath)) {
+                    if (file.sha1) {
+                        // OPTIMIZATION: Check local manifest first to avoid heavy hashing
+                        const localFile = this.localManifest && this.localManifest.files
+                            ? this.localManifest.files.find(f => f.path === file.path)
+                            : null;
 
-            try {
-                const writer = fs.createWriteStream(destPath);
-                const response = await axios({
-                    url: encodeURI(file.url),
-                    method: 'GET',
-                    responseType: 'stream'
-                });
+                        if (localFile && localFile.sha1 === file.sha1) {
+                            // If it's in the manifest and the hash matches, trust it and skip hashing disk file
+                            processed++;
+                            this.emit('progress', { current: processed, total, type: 'update' });
+                            return;
+                        }
 
-                response.data.pipe(writer);
+                        const localHash = await this.calculateHash(destPath);
+                        if (localHash === file.sha1) {
+                            processed++;
+                            this.emit('progress', { current: processed, total, type: 'update' });
+                            return;
+                        }
+                    }
+                }
 
-                await new Promise((resolve, reject) => {
-                    writer.on('finish', resolve);
-                    writer.on('error', reject);
+                this.emit('log', `Descargando: ${file.path}`);
+                await fs.ensureDir(path.dirname(destPath));
+
+                await this.retryOperation(async () => {
+                    const writer = fs.createWriteStream(destPath);
+                    try {
+                        const response = await axios({
+                            url: encodeURI(file.url),
+                            method: 'GET',
+                            responseType: 'stream'
+                        });
+
+                        response.data.pipe(writer);
+
+                        await new Promise((resolve, reject) => {
+                            writer.on('finish', resolve);
+                            writer.on('error', (err) => {
+                                writer.close();
+                                reject(err);
+                            });
+                        });
+                    } catch (err) {
+                        writer.close();
+                        throw err;
+                    }
                 });
 
                 if (file.sha1) {

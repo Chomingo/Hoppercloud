@@ -3,48 +3,5 @@
     "gameVersion": "fabric-loader-0.17.2-1.21.9",
     "launcherVersion": "1.1.1",
     "launcherUrl": "https://github.com/Chomingo/Hoppercloud/releases/download/v1.1.1/hoppersetup-1.1.1.exe",
-    "files": [
-        {
-            "path": "mods/fabric-api-0.134.0+1.21.9.jar",
-            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/fabric-api-0.134.0+1.21.9.jar",
-            "sha1": "1f5ba40f85c96c4f8b661097d3e3f8906cc55c4f",
-            "size": 2290691
-        },
-        {
-            "path": "mods/fabric-language-kotlin-1.13.7+kotlin.2.2.21.jar",
-            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/fabric-language-kotlin-1.13.7+kotlin.2.2.21.jar",
-            "sha1": "ab71e8daf9a2d529204b5c28b3801713d22f3d46",
-            "size": 7479608
-        },
-        {
-            "path": "mods/lithium-fabric-0.19.2+mc1.21.9.jar",
-            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/lithium-fabric-0.19.2+mc1.21.9.jar",
-            "sha1": "0f9b70bd70c14f293b76e90917dd7de78c47c073",
-            "size": 830020
-        },
-        {
-            "path": "mods/malilib-fabric-1.21.10-0.26.6.jar",
-            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/malilib-fabric-1.21.10-0.26.6.jar",
-            "sha1": "e419a4895ec2e547f345495fcc3be56a853b09ea",
-            "size": 1509212
-        },
-        {
-            "path": "mods/modmenu-16.0.0-rc.1.jar",
-            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/modmenu-16.0.0-rc.1.jar",
-            "sha1": "c927187d11cb6db2d3daad2a24899f1a70a1618f",
-            "size": 1077403
-        },
-        {
-            "path": "mods/sodium-fabric-0.7.3+mc1.21.10.jar",
-            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/sodium-fabric-0.7.3+mc1.21.10.jar",
-            "sha1": "1c3ffa862d9fa4479abf67a88527907d60237248",
-            "size": 1676903
-        },
-        {
-            "path": "servers.dat",
-            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/servers.dat",
-            "sha1": "be8cfc3f0472bdfd5dd8ac4f09f7bac12383b992",
-            "size": 77
-        }
-    ]
+    "files": []
 }

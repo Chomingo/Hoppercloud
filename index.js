@@ -43,6 +43,9 @@ let mainWindow;
 // Initialize GameUpdater
 const gameUpdater = new GameUpdater();
 
+// Global state tracking
+let isGameRunning = false;
+
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 900,
@@ -142,6 +145,12 @@ ipcMain.handle('get-instances', async () => {
 ipcMain.on('check-updates', async (event, { instanceId } = {}) => {
     const sender = event.sender;
 
+    if (isGameRunning) {
+        sender.send('error', 'No se puede actualizar mientras el juego está en ejecución.');
+        sender.send('log', 'ADVERTENCIA: Intento de actualización abortado porque el juego está abierto.');
+        return;
+    }
+
     // Setup listeners for this update session
     const onLog = (msg) => {
         sender.send('log', msg);
@@ -225,15 +234,25 @@ ipcMain.on('launch-game', async (event, { username, mode, memory, instanceId }) 
         sender.send('status', 'Iniciando');
         logToConsole('Iniciando juego...');
 
+        isGameRunning = true;
         // Launch Game (updates are assumed to be done)
         await launchGame(username, sender, auth, memory, (msg) => consoleLog.info(msg), instanceId);
 
         sender.send('status', 'Jugando');
     } catch (error) {
         console.error(error);
+        isGameRunning = false;
         sender.send('error', error.message);
         consoleLog.error(error.message);
     }
+});
+
+ipcMain.on('launch-close', () => {
+    isGameRunning = false;
+});
+
+ipcMain.on('launch-error', () => {
+    isGameRunning = false;
 });
 
 // (Moved to top)

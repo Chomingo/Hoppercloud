@@ -86,10 +86,32 @@ async function launchGame(username, sender, auth = null, memory = '4G', logCallb
         },
         overrides: {
             detached: false,
-            checkFiles: true,
-            checkHash: true,
-            gameDirectory: gameDirectory // Set the instance specific directory
-        }
+            checkFiles: false, // Optimización: Ya verificamos los archivos en GameUpdater
+            checkHash: false, // Optimización: Saltar el hashing redundante
+            gameDirectory: gameDirectory // Directorio específico de la instancia
+        },
+        jvmArgs: [
+            "-XX:+UseG1GC",
+            "-XX:+ParallelRefProcEnabled",
+            "-XX:MaxGCPauseMillis=200",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+DisableExplicitGC",
+            "-XX:+AlwaysPreTouch",
+            "-XX:G1NewSizePercent=30",
+            "-XX:G1MaxNewSizePercent=40",
+            "-XX:G1HeapRegionSize=8M",
+            "-XX:G1ReservePercent=20",
+            "-XX:G1HeapWastePercent=5",
+            "-XX:G1MixedGCCountTarget=4",
+            "-XX:InitiatingHeapOccupancyPercent=15",
+            "-XX:G1MixedGCLiveThresholdPercent=90",
+            "-XX:G1RSetUpdatingPauseTimePercent=5",
+            "-XX:SurvivorRatio=32",
+            "-XX:+PerfDisableSharedMem",
+            "-XX:MaxTenuringThreshold=1",
+            "-Dusing.aikars.flags=https://mcflags.emc.gs",
+            "-Daikars.new.flags=true"
+        ]
     };
 
     // Verify the file exists in the standard location, but DO NOT pass 'custom' path to opts.
