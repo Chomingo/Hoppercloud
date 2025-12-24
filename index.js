@@ -194,7 +194,8 @@ ipcMain.on('check-updates', async (event, { instanceId } = {}) => {
             gameDirectory = path.join(GAME_ROOT, 'instances', selectedInstance.id);
         }
 
-        sender.send('log', `Verificando actualizaciones para: ${selectedInstance.name} en ${manifestUrl}`);
+        // Usamos el método log del updater para que respete el filtrado de privacidad
+        gameUpdater.log(`Verificando actualizaciones para: ${selectedInstance.name} en ${manifestUrl}`);
 
         // Check and Download
         await gameUpdater.checkAndDownloadUpdates(gameDirectory, manifestUrl);

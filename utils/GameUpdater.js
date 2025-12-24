@@ -5,6 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { GAME_ROOT } = require('./constants');
 const { app } = require('electron');
+const AdmZip = require('adm-zip');
 
 class GameUpdater extends EventEmitter {
     constructor() {
@@ -13,6 +14,39 @@ class GameUpdater extends EventEmitter {
         this.concurrencyLimit = 10;
         this.preservedFiles = ['options.txt', 'optionsof.txt', 'optionsshaders.txt', 'servers.dat'];
         this.localManifest = null;
+    }
+
+    log(message) {
+        // En modo desarrollo (npm start), mostramos todo el detalle técnico
+        if (!app.isPackaged) {
+            this.emit('log', message);
+            return;
+        }
+
+        // En el .exe final, filtramos contenido sensible
+        let safeMessage = message;
+
+        // Si el mensaje contiene una URL, lo simplificamos
+        if (message.includes('http://') || message.includes('https://')) {
+            if (message.includes('manifest.json') || message.includes('Verificando actualizaciones para:')) {
+                safeMessage = 'Buscando actualizaciones en el servidor...';
+            } else if (message.includes('.mrpack')) {
+                safeMessage = 'Descargando configuración del modpack...';
+            } else {
+                safeMessage = 'Conectando con el servidor de archivos...';
+            }
+        }
+
+        // Si el mensaje menciona rutas de mods o archivos específicos, lo hacemos genérico
+        if (message.startsWith('Descargando:') || message.startsWith('Descargando mod:')) {
+            safeMessage = 'Actualizando archivos del juego...';
+        }
+
+        if (message.startsWith('Eliminando mod antiguo:')) {
+            safeMessage = 'Limpiando archivos antiguos...';
+        }
+
+        this.emit('log', safeMessage);
     }
 
     static compareVersions(v1, v2) {
@@ -56,7 +90,7 @@ class GameUpdater extends EventEmitter {
             manifestUrl = 'https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/manifest.json';
         }
 
-        this.emit('log', `Buscando actualizaciones en: ${manifestUrl}`);
+        this.log(`Buscando actualizaciones en: ${manifestUrl}`);
 
         // Load local manifest for caching
         try {
@@ -79,20 +113,25 @@ class GameUpdater extends EventEmitter {
             try {
                 const response = await axios.get(`${manifestUrl}?t=${Date.now()}`);
                 manifest = response.data;
+
+                // Save the base URL of the manifest for resolving relative paths later
+                if (manifestUrl.startsWith('http')) {
+                    manifest.url_base = manifestUrl.substring(0, manifestUrl.lastIndexOf('/'));
+                }
             } catch (e) {
                 if (e.code === 'ENOTFOUND' || e.code === 'ETIMEDOUT') {
-                    this.emit('log', 'No se pudo conectar al servidor de actualizaciones (Sin internet o servidor caído).');
+                    this.log('No se pudo conectar al servidor de actualizaciones (Sin internet o servidor caído).');
                 } else if (e.response && e.response.status === 404) {
-                    this.emit('log', `Error 404: No se encontró el manifest en ${manifestUrl}. Asegúrate de que existe.`);
+                    this.log(`Error 404: No se encontró el manifest en ${manifestUrl}. Asegúrate de que existe.`);
                 } else {
-                    this.emit('log', `Error descargando manifiesto: ${e.message}`);
+                    this.log(`Error descargando manifiesto: ${e.message}`);
                 }
-                this.emit('log', 'Saltando actualización...');
+                this.log('Saltando actualización...');
                 return;
             }
         }
 
-        this.emit('log', `Versión remota: ${manifest.version}`);
+        this.log(`Versión remota: ${manifest.version}`);
 
         // Validate Manifest
         if (!manifest.gameVersion || !manifest.files) {
@@ -103,7 +142,7 @@ class GameUpdater extends EventEmitter {
             try {
                 await this.cleanupOldMods(manifest, targetGameDir);
             } catch (e) {
-                this.emit('log', `Advertencia: Fallo al limpiar mods antiguos: ${e.message}`);
+                this.log(`Advertencia: Fallo al limpiar mods antiguos: ${e.message}`);
             }
 
             try {
@@ -112,18 +151,26 @@ class GameUpdater extends EventEmitter {
                 throw new Error(`Fallo durante la descarga de archivos: ${e.message}`);
             }
 
+            if (manifest.mrpack) {
+                try {
+                    await this.handleMrPack(manifest, targetGameDir);
+                } catch (e) {
+                    this.log(`Error procesando Modpack (.mrpack): ${e.message}`);
+                }
+            }
+
             try {
                 await this.patchFabric(manifest); // Shared logic, usually installs to global versions default
             } catch (e) {
                 throw new Error(`Fallo al instalar/parchear Fabric: ${e.message}`);
             }
 
-            this.emit('log', 'Todas las actualizaciones descargadas.');
+            this.log('Todas las actualizaciones descargadas.');
 
             try {
                 await fs.writeJson(path.join(targetGameDir, 'client-manifest.json'), manifest);
             } catch (e) {
-                this.emit('log', `Advertencia: No se pudo guardar client-manifest.json: ${e.message}`);
+                this.log(`Advertencia: No se pudo guardar client-manifest.json: ${e.message}`);
             }
         }
     }
@@ -131,7 +178,7 @@ class GameUpdater extends EventEmitter {
     async cleanupOldMods(manifest, targetGameDir) {
         const adminFile = path.join(targetGameDir, '.admin');
         if (await fs.pathExists(adminFile)) {
-            this.emit('log', 'MODO ADMIN DETECTADO: Saltando limpieza de mods antiguos.');
+            this.log('MODO ADMIN DETECTADO: Saltando limpieza de mods antiguos.');
             return;
         }
 
@@ -144,7 +191,7 @@ class GameUpdater extends EventEmitter {
 
             for (const file of localMods) {
                 if (!manifestModNames.includes(file)) {
-                    this.emit('log', `Eliminando mod antiguo: ${file}`);
+                    this.log(`Eliminando mod antiguo: ${file}`);
                     const filePath = path.join(modsDir, file);
                     await this.retryOperation(() => fs.remove(filePath));
                 }
@@ -158,7 +205,7 @@ class GameUpdater extends EventEmitter {
                 return await operation();
             } catch (err) {
                 if (err.code === 'EBUSY' && i < maxRetries - 1) {
-                    this.emit('log', `Archivo ocupado, reintentando en ${delay}ms... (Intento ${i + 1}/${maxRetries})`);
+                    this.log(`Archivo ocupado, reintentando en ${delay}ms... (Intento ${i + 1}/${maxRetries})`);
                     await new Promise(resolve => setTimeout(resolve, delay));
                 } else {
                     throw err;
@@ -178,7 +225,7 @@ class GameUpdater extends EventEmitter {
 
 
                 if (this.preservedFiles.includes(fileName) && await fs.pathExists(destPath)) {
-                    this.emit('log', `Conservando archivo de usuario: ${fileName}`);
+                    this.log(`Conservando archivo de usuario: ${fileName}`);
                     processed++;
                     this.emit('progress', { current: processed, total, type: 'update' });
                     return;
@@ -188,7 +235,7 @@ class GameUpdater extends EventEmitter {
                 if (!app.isPackaged) {
                     const localSourcePath = path.join(__dirname, '..', 'update_files', file.path);
                     if (await fs.pathExists(localSourcePath)) {
-                        this.emit('log', `[DEV] Copiando localmente: ${file.path}`);
+                        this.log(`[DEV] Copiando localmente: ${file.path}`);
                         await fs.ensureDir(path.dirname(destPath));
                         await this.retryOperation(() => fs.copy(localSourcePath, destPath));
                         processed++;
@@ -221,7 +268,7 @@ class GameUpdater extends EventEmitter {
                     }
                 }
 
-                this.emit('log', `Descargando: ${file.path}`);
+                this.log(`Descargando: ${file.path}`);
                 await fs.ensureDir(path.dirname(destPath));
 
                 await this.retryOperation(async () => {
@@ -253,7 +300,7 @@ class GameUpdater extends EventEmitter {
                     if (newHash !== file.sha1) {
                         const msg = `ADVERTENCIA HASH: ${file.path} | Esperado: ${file.sha1} | Obtenido: ${newHash}`;
                         console.warn(msg);
-                        this.emit('log', msg);
+                        this.log(msg);
                     }
                 }
 
@@ -261,9 +308,9 @@ class GameUpdater extends EventEmitter {
                 this.emit('progress', { current: processed, total, type: 'update' });
             } catch (fileErr) {
                 if (fileErr.response && fileErr.response.status === 404) {
-                    this.emit('log', `ADVERTENCIA: Archivo no encontrado (404): ${file.path}. Saltando...`);
+                    this.log(`ADVERTENCIA: Archivo no encontrado (404): ${file.path}. Saltando...`);
                 } else {
-                    this.emit('log', `ERROR descargando ${file.path}: ${fileErr.message}`);
+                    this.log(`ERROR descargando ${file.path}: ${fileErr.message}`);
                     throw fileErr;
                 }
             }
@@ -273,6 +320,133 @@ class GameUpdater extends EventEmitter {
             const chunk = manifest.files.slice(i, i + this.concurrencyLimit);
             await Promise.all(chunk.map(downloadFile));
         }
+    }
+
+    async handleMrPack(manifest, targetGameDir) {
+        const mrpackRelativePath = manifest.mrpack;
+        const mrpackLocalPath = path.join(targetGameDir, 'modpack.mrpack');
+        let mrpackSourcePath;
+
+        // 1. Resolve source
+        if (mrpackRelativePath.startsWith('http')) {
+            this.log('Descargando archivo .mrpack...');
+            mrpackSourcePath = mrpackLocalPath;
+            const response = await axios({
+                url: mrpackRelativePath,
+                method: 'GET',
+                responseType: 'stream'
+            });
+            const writer = fs.createWriteStream(mrpackSourcePath);
+            response.data.pipe(writer);
+            await new Promise((resolve, reject) => {
+                writer.on('finish', resolve);
+                writer.on('error', reject);
+            });
+        } else {
+            // 2. Resolve source (Local or Remote)
+            mrpackSourcePath = path.join(__dirname, '..', mrpackRelativePath);
+
+            if (!await fs.pathExists(mrpackSourcePath)) {
+                // Try relative to targetGameDir as fallback
+                mrpackSourcePath = path.join(targetGameDir, mrpackRelativePath);
+            }
+
+            // 3. Fallback to Remote: If not found locally, try relative to the manifest URL
+            if (!await fs.pathExists(mrpackSourcePath) && manifest.url_base) {
+                this.emit('log', 'Archivo .mrpack no encontrado localmente. Intentando descarga remota...');
+                const remoteUrl = `${manifest.url_base}/${mrpackRelativePath}`;
+
+                // Reuse download logic
+                mrpackSourcePath = mrpackLocalPath;
+                const response = await axios({
+                    url: remoteUrl,
+                    method: 'GET',
+                    responseType: 'stream'
+                });
+                const writer = fs.createWriteStream(mrpackSourcePath);
+                response.data.pipe(writer);
+                await new Promise((resolve, reject) => {
+                    writer.on('finish', resolve);
+                    writer.on('error', reject);
+                });
+            }
+        }
+
+        if (!await fs.pathExists(mrpackSourcePath)) {
+            throw new Error(`Archivo .mrpack no encontrado en: ${mrpackSourcePath}`);
+        }
+
+        this.log('Procesando archivo .mrpack...');
+        const zip = new AdmZip(mrpackSourcePath);
+        const tempDir = path.join(targetGameDir, '.mrpack_temp');
+        await fs.ensureDir(tempDir);
+        zip.extractAllTo(tempDir, true);
+
+        const indexPath = path.join(tempDir, 'modrinth.index.json');
+        if (!await fs.pathExists(indexPath)) {
+            throw new Error('El archivo .mrpack no es válido (falta modrinth.index.json)');
+        }
+
+        const index = await fs.readJson(indexPath);
+        this.log(`Instalando Modpack: ${index.name} v${index.versionId}`);
+
+        // 2. Install Mods from Index
+        let processed = 0;
+        const total = index.files.length;
+
+        const downloadMod = async (file) => {
+            // mrpack files usually have 'path' like 'mods/sodium.jar'
+            const destPath = path.join(targetGameDir, file.path);
+
+            // Check cache
+            if (await fs.pathExists(destPath)) {
+                if (file.hashes && file.hashes.sha1) {
+                    const localHash = await this.calculateHash(destPath);
+                    if (localHash === file.hashes.sha1) {
+                        processed++;
+                        this.emit('progress', { current: processed, total, type: 'update' });
+                        return;
+                    }
+                }
+            }
+
+            this.log(`Descargando mod: ${file.path}`);
+            await fs.ensureDir(path.dirname(destPath));
+
+            await this.retryOperation(async () => {
+                const response = await axios({
+                    url: file.downloads[0], // Modrinth provides an array of URLs
+                    method: 'GET',
+                    responseType: 'stream'
+                });
+                const writer = fs.createWriteStream(destPath);
+                response.data.pipe(writer);
+                await new Promise((resolve, reject) => {
+                    writer.on('finish', resolve);
+                    writer.on('error', reject);
+                });
+            });
+
+            processed++;
+            this.emit('progress', { current: processed, total, type: 'update' });
+        };
+
+        // Download mods with concurrency
+        for (let i = 0; i < index.files.length; i += this.concurrencyLimit) {
+            const chunk = index.files.slice(i, i + this.concurrencyLimit);
+            await Promise.all(chunk.map(downloadMod));
+        }
+
+        // 3. Handle Overrides
+        const overridesDir = path.join(tempDir, 'overrides');
+        if (await fs.pathExists(overridesDir)) {
+            this.log('Aplicando configuraciones y archivos adicionales...');
+            await fs.copy(overridesDir, targetGameDir);
+        }
+
+        // Cleanup temp
+        await fs.remove(tempDir);
+        this.log('Modpack instalado correctamente.');
     }
 
     async patchFabric(manifest) {
@@ -288,12 +462,12 @@ class GameUpdater extends EventEmitter {
             loaderVersion = versionParts[2];
             mcVersion = versionParts.slice(3).join('-');
         } else {
-            this.emit('log', `Error: Formato de versión desconocido: ${manifest.gameVersion}`);
+            this.log(`Error: Formato de versión desconocido: ${manifest.gameVersion}`);
             throw new Error("Formato de versión inválido. Debe ser 'fabric-loader-LOADER-MC'");
         }
 
         if (!await fs.pathExists(targetJsonPath)) {
-            this.emit('log', `Versión ${targetVersion} no detectada. Instalando...`);
+            this.log(`Versión ${targetVersion} no detectada. Instalando...`);
 
             try {
                 await fs.ensureDir(targetVersionDir);
@@ -367,9 +541,9 @@ class GameUpdater extends EventEmitter {
                 delete fabricJson.inheritsFrom;
 
                 await fs.writeJson(targetJsonPath, fabricJson, { spaces: 4 });
-                this.emit('log', `Instalación de ${targetVersion} completada.`);
+                this.log(`Instalación de ${targetVersion} completada.`);
             } catch (e) {
-                this.emit('log', `ERROR CRÍTICO instalando versión: ${e.message}`);
+                this.log(`ERROR CRÍTICO instalando versión: ${e.message}`);
                 throw e;
             }
         }
