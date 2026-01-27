@@ -121,18 +121,31 @@ const instanceDesc = document.getElementById('instance-desc');
 function renderSidebar() {
     if (!sidebar) return;
     sidebar.innerHTML = '';
-    instances.forEach(insta => {
+    instances.forEach((insta, index) => {
         if (!insta.enabled) return;
 
         const iconDiv = document.createElement('div');
         iconDiv.className = `instance-icon ${selectedInstance && selectedInstance.id === insta.id ? 'active' : ''}`;
         iconDiv.title = insta.name;
 
-        if (insta.icon) {
-            const img = document.createElement('img');
-            // Try to resolve path relative to project root
-            img.src = path.isAbsolute(insta.icon) ? insta.icon : path.join(__dirname, '..', insta.icon);
+        // Try to resolve icon Path
+        // 1. Explicitly set in manifest
+        // 2. Default naming convention: assets/instancia1.png, assets/instancia2.png...
+        // 3. Fallback to generic icon or first letter
+        const fs = require('fs-extra');
+        let iconPath = insta.icon ? (path.isAbsolute(insta.icon) ? insta.icon : path.join(__dirname, '..', insta.icon)) : null;
 
+        // Fallback to convention if missing
+        if (!iconPath || !fs.existsSync(iconPath)) {
+            const conventionPath = path.join(__dirname, '..', 'assets', `instancia${index + 1}.png`);
+            if (fs.existsSync(conventionPath)) {
+                iconPath = conventionPath;
+            }
+        }
+
+        if (iconPath && fs.existsSync(iconPath)) {
+            const img = document.createElement('img');
+            img.src = iconPath;
             img.onerror = () => {
                 img.style.display = 'none';
                 iconDiv.textContent = insta.name.charAt(0).toUpperCase();
@@ -678,16 +691,21 @@ if (cleanupBtn) {
     });
 }
 
-// Background Management Logic
-const uploadBgBtn = document.getElementById('upload-bg-btn');
-const resetBgBtn = document.getElementById('reset-bg-btn');
-const bgFileInput = document.getElementById('bg-file-input');
-
-// Initialize background
+// Initial Background Initialization
 (async () => {
     try {
+        const fs = require('fs-extra');
+        const customFondoLocal = path.join(__dirname, '..', 'assets', 'fondo.png');
         const savedBg = localStorage.getItem('customBackground');
-        if (savedBg && savedBg !== 'default') {
+
+        if (fs.existsSync(customFondoLocal)) {
+            // Priority 1: assets/fondo.png (Admin set)
+            const bgUrl = `file://${customFondoLocal.replace(/\\/g, '/')}`;
+            document.body.style.backgroundImage = `url('${bgUrl}')`;
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = 'center';
+        } else if (savedBg && savedBg !== 'default') {
+            // Priority 2: Leftover legacy backgrounds (if any)
             document.body.style.backgroundImage = `url('${savedBg.replace(/\\/g, '/')}')`;
             document.body.style.backgroundSize = 'cover';
             document.body.style.backgroundPosition = 'center';
@@ -696,69 +714,4 @@ const bgFileInput = document.getElementById('bg-file-input');
         console.error('Error loading background:', e);
     }
 })();
-
-if (uploadBgBtn && bgFileInput) {
-    uploadBgBtn.addEventListener('click', () => {
-        bgFileInput.click();
-    });
-
-    bgFileInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const fs = require('fs-extra');
-
-        try {
-            // Using webUtils or fallback for path
-            const filePath = webUtils ? webUtils.getPathForFile(file) : file.path;
-
-            if (!filePath) {
-                log('Error: No se pudo leer la imagen. Permisos insuficientes.');
-                return;
-            }
-
-            // Create target directory
-            const backgroundsDir = path.join(__dirname, 'backgrounds');
-            await fs.ensureDir(backgroundsDir);
-
-            // Generate unique name to avoid cache issues or collisions
-            const ext = path.extname(filePath);
-            const fileName = `bg_${Date.now()}${ext}`;
-            const targetPath = path.join(backgroundsDir, fileName);
-
-            // Copy file
-            await fs.copy(filePath, targetPath);
-
-            // Apply background
-            // We use file:// protocol for local files
-            const bgUrl = `file://${targetPath.replace(/\\/g, '/')}`;
-
-            document.body.style.backgroundImage = `url('${bgUrl}')`;
-            document.body.style.backgroundSize = 'cover';
-            document.body.style.backgroundPosition = 'center';
-
-            // Save preference
-            localStorage.setItem('customBackground', bgUrl);
-
-            log('✅ Fondo actualizado correctamente.');
-
-            // Cleanup old files if necessary? (Skipped for now to keep history if needed later)
-        } catch (error) {
-            log(`❌ Error al cambiar el fondo: ${error.message}`);
-            console.error(error);
-        } finally {
-            bgFileInput.value = '';
-        }
-    });
-}
-
-if (resetBgBtn) {
-    resetBgBtn.addEventListener('click', () => {
-        localStorage.removeItem('customBackground');
-        document.body.style.backgroundImage = ''; // Falls back to CSS default
-        document.body.style.backgroundSize = '';
-        document.body.style.backgroundPosition = '';
-        log('🔄 Fondo restablecido al predeterminado.');
-    });
-}
 
