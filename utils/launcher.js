@@ -4,9 +4,10 @@ const { Client } = require('minecraft-launcher-core');
 const { GAME_ROOT } = require('./constants');
 const launcher = new Client();
 
-const instances = require('./instances');
+const defaultInstances = require('./instances');
 
-async function launchGame(username, sender, auth = null, memory = '4G', logCallback = null, instanceId = 'default') {
+async function launchGame(username, sender, auth = null, memory = '4G', logCallback = null, instanceId = 'default', instancesList = null) {
+    const instances = instancesList || defaultInstances;
     // Determine Game Directory first to find the correct manifest
     let gameDirectory = GAME_ROOT;
     const selectedInstance = instances.find(i => i.id === instanceId);

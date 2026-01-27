@@ -315,11 +315,10 @@ ipcMain.on('launch-game', async (event, { username, mode, memory, instanceId }) 
         logLocal('Iniciando juego...');
 
         isGameRunning = true;
-        // Launch Game (updates are assumed to be done)
-        const selectedInstanceName = (await require('./utils/instances')).find(i => i.id === instanceId)?.name || 'Minecraft';
-        discord.setPlayingStatus(selectedInstanceName);
+        const selectedInstance = instances.find(i => i.id === instanceId) || instances[0];
+        discord.setPlayingStatus(selectedInstance.name);
 
-        await launchGame(username, sender, auth, memory, (msg) => logToConsole(msg), instanceId);
+        await launchGame(username, sender, auth, memory, (msg) => logToConsole(msg), instanceId, instances);
 
         sender.send('status', 'Jugando');
     } catch (error) {
