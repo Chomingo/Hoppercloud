@@ -7,12 +7,29 @@ const launcher = new Client();
 const instances = require('./instances');
 
 async function launchGame(username, sender, auth = null, memory = '4G', logCallback = null, instanceId = 'default') {
-    // Load configuration from the manifest we just downloaded
+    // Determine Game Directory first to find the correct manifest
+    let gameDirectory = GAME_ROOT;
+    const selectedInstance = instances.find(i => i.id === instanceId);
+
+    if (selectedInstance && selectedInstance.gameDir) {
+        gameDirectory = path.isAbsolute(selectedInstance.gameDir) ? selectedInstance.gameDir : path.join(GAME_ROOT, selectedInstance.gameDir);
+    } else if (selectedInstance && selectedInstance.id !== 'default') {
+        gameDirectory = path.join(GAME_ROOT, 'instances', selectedInstance.id);
+    }
+
+    // Load manifest from the SPECIFIC instance directory (preferred) or global fallback
     let manifest = {};
     try {
-        manifest = await fs.readJson(path.join(GAME_ROOT, 'client-manifest.json'));
+        const instanceManifest = path.join(gameDirectory, 'client-manifest.json');
+        const globalManifest = path.join(GAME_ROOT, 'client-manifest.json');
+
+        if (await fs.pathExists(instanceManifest)) {
+            manifest = await fs.readJson(instanceManifest);
+        } else {
+            manifest = await fs.readJson(globalManifest);
+        }
     } catch (e) {
-        const msg = 'Warning: No manifest found. Using defaults.';
+        const msg = 'Warning: No manifest found. Using default 1.20.1.';
         sender.send('log', msg);
         if (logCallback) logCallback(msg);
     }
@@ -55,25 +72,8 @@ async function launchGame(username, sender, auth = null, memory = '4G', logCallb
         throw e; // Stop launch
     }
 
-    // Determine Game Directory based on Instance
-    let gameDirectory = GAME_ROOT; // Default
-    const selectedInstance = instances.find(i => i.id === instanceId);
-
-    if (selectedInstance && selectedInstance.gameDir) {
-        // If gameDir is absolute, use it; otherwise resolve relative to GAME_ROOT
-        if (path.isAbsolute(selectedInstance.gameDir)) {
-            gameDirectory = selectedInstance.gameDir;
-        } else {
-            gameDirectory = path.join(GAME_ROOT, selectedInstance.gameDir);
-        }
-
-        // Ensure directory exists
-        await fs.ensureDir(gameDirectory);
-    } else if (selectedInstance && selectedInstance.id !== 'default') {
-        // Fallback: use id as folder name
-        gameDirectory = path.join(GAME_ROOT, 'instances', selectedInstance.id);
-        await fs.ensureDir(gameDirectory);
-    }
+    // Ensure directory exists
+    await fs.ensureDir(gameDirectory);
 
     const opts = {
         clientPackage: null,
