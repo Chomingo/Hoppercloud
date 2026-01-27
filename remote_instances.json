@@ -5,7 +5,7 @@
         "icon": "assets/icon.png",
         "description": "Instancia Principal",
         "modsDir": "mods",
-        "enabled": true,
+        "enabled": false,
         "manifestUrl": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/manifest.json"
     },
     {
@@ -15,7 +15,7 @@
         "description": "Pack de Mods de Aventura",
         "modsDir": "instances/adventure/mods",
         "gameDir": "instances/adventure",
-        "enabled": true,
+        "enabled": false,
         "manifestUrl": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/adventure-branch/manifest.json"
     },
     {
@@ -25,7 +25,7 @@
         "description": "Pack de Mods Técnicos",
         "modsDir": "instances/tech/mods",
         "gameDir": "instances/tech",
-        "enabled": true,
+        "enabled": false,
         "manifestUrl": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/tech-dev/manifest.json"
     },
     {
@@ -35,7 +35,7 @@
         "description": "Prueba las últimas novedades aquí",
         "modsDir": "instances/dev/mods",
         "gameDir": "instances/dev",
-        "enabled": true,
+        "enabled": false,
         "manifestUrl": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/dev/manifest.json"
     },
     {

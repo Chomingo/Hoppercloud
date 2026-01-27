@@ -1,59 +1,54 @@
-# GUÍA DE GESTIÓN DE MODPACKS (PERFILES) POR RAMAS
+# 📦 GUÍA DE GESTIÓN DE MODPACKS (.MRPACK)
 
-Este launcher utiliza un sistema de "Ramas de Git" para separar los modpacks. Cada perfil que ves en la barra lateral del launcher apunta a una rama diferente en tu GitHub.
-
-## 1. EL CONCEPTO CLAVE
-- Rama MASTER = Perfil Principal
-- Rama ADVENTURE-BRANCH = Perfil Aventura
-- Rama TECH-DEV = Perfil Técnico
-- Rama DEV = Perfil Beta / Desarrollo
-
-Cada rama tiene su PROPIA copia de la carpeta 'update_files/mods' y su propio 'manifest.json'.
+Este launcher está optimizado para trabajar con archivos .mrpack de Modrinth, lo que facilita mucho la actualización de los packs de mods y sus configuraciones.
 
 ---
 
-## 2. FLUJO DE TRABAJO (PASO A PASO)
+## 🚀 1. CÓMO ACTUALIZAR UN MODPACK
 
-Si quieres añadir un mod SOLO al perfil DEV:
+1.  **PREPARA EL ARCHIVO**:
+    Exporta tu modpack desde CurseForge o Prism Launcher como un archivo .mrpack.
+    
+2.  **COLOCA EL ARCHIVO**:
+    Guárdalo en la carpeta:
+    > update_files/modpacks/Nombre_Del_Pack.mrpack
 
-1.  **CAMBIAR DE RAMA**:
-    Abre la terminal y entra en la rama correspondiente:
-    > git checkout dev
+3.  **CONFIGURA EL MANIFIESTO**:
+    Abre `manifest.json` (o el manifest del perfil correspondiente) y actualiza la ruta:
+    ```json
+    "mrpack": "update_files/modpacks/Nombre_Del_Pack.mrpack"
+    ```
+    *TIP: Si quieres cargar varios packs a la vez, usa una lista: ["pack1.mrpack", "pack2.mrpack"]*
 
-2.  **PREPARAR ARCHIVOS**:
-    Copia tus nuevos mods (.jar) dentro de:
-    > update_files/mods/
-
-3.  **ACTUALIZAR EL MAPA (MANIFEST)**:
-    Ejecuta el script para que el launcher sepa que hay nuevos mods en esta rama:
-    > node generate_manifest.js
-
-4.  **GUARDAR Y SUBIR**:
-    Sube los cambios SOLO a esa rama de GitHub:
+4.  **SUBE A GITHUB**:
     > git add .
-    > git commit -m "Añadidos mods para el perfil Dev"
-    > git push origin dev
+    > git commit -m "Actualizado modpack a la versión X.Y.Z"
+    > git push origin master
 
 ---
 
-## 3. PREGUNTAS FRECUENTES (EXPLICACIÓN EXTRA)
+## 🔧 2. CONFIGURACIONES Y OVERRIDES
 
-### ¿Por qué no se mezclan los mods?
-Porque Git es como un "universo paralelo". Cuando estás en la rama 'dev', Git oculta los archivos de 'master' y te muestra solo los de 'dev'. El launcher, al estar configurado para leer de la URL de 'dev', solo ve lo que hay en esa rama.
+El launcher procesa automáticamente estas carpetas dentro del .mrpack:
+- **overrides**: Configuraciones base.
+- **client-overrides**: Configuraciones específicas del cliente (muchos packs de Modrinth usan esta).
 
-### ¿Qué pasa si quiero que un mod esté en TODOS los perfiles?
-Tendrías que hacer el proceso en cada rama, o añadirlo en 'master' y luego usar el comando 'git merge master' estando dentro de las otras ramas. 
-*Cuidado:* El merge copia TODO (borrados y añadidos), así que úsalo solo si quieres que las ramas sean iguales.
-
-### ¿Cómo borro un mod de un solo perfil?
-1. Entras en la rama (ej: git checkout adventure-branch).
-2. Borras el archivo de 'update_files/mods/'.
-3. Ejecutas 'node generate_manifest.js'.
-4. Haces el push (git push origin adventure-branch).
+Todo lo que metas en estas carpetas dentro del .mrpack (como configs de bobby, shaderpacks, etc.) se copiará automáticamente a la carpeta del juego del jugador.
 
 ---
 
-## 4. COMANDOS ÚTILES
-- 'git branch': Te dice en qué rama estás ahora (aparece con un asterisco *).
-- 'git checkout master': Vuelve al perfil principal.
-- 'git status': Te dice si tienes archivos nuevos sin guardar.
+## ⚠️ 3. CAMBIOS DE VERSION DE MINECRAFT
+
+Si cambias de una versión (ej: 1.20.1) a otra (ej: 1.21.9):
+1. Cambia el campo `gameVersion` en el `manifest.json`.
+2. El launcher detectará que la versión es diferente y **LIMPIARÁ AUTOMÁTICAMENTE** la carpeta de mods del jugador.
+3. Esto garantiza que no queden mods viejos incompatibles que rompan el juego.
+
+---
+
+## 📁 4. INSTANCIAS SEPARADAS (RECOMENDADO)
+
+Si quieres que los jugadores puedan tener varios modpacks instalados al mismo tiempo sin que se mezclen:
+1. En `remote_instances.json`, asegúrate de que cada perfil tenga un `gameDir` único.
+   Ejemplo: `"gameDir": "instances/horizon"`
+2. Esto creará carpetas separadas para cada pack, permitiendo que uno sea 1.20.1 y otro 1.21.9 sin conflictos.
