@@ -379,7 +379,7 @@ class GameUpdater extends EventEmitter {
             // 3. Fallback to Remote: If not found locally, try relative to the manifest URL
             if (!await fs.pathExists(mrpackSourcePath) && manifest.url_base) {
                 this.emit('log', 'Archivo .mrpack no encontrado localmente. Intentando descarga remota...');
-                const remoteUrl = `${manifest.url_base}/${mrpackRelativePath}`;
+                const remoteUrl = encodeURI(`${manifest.url_base}/${mrpackRelativePath}`);
 
                 // Reuse download logic
                 mrpackSourcePath = mrpackLocalPath;
@@ -429,26 +429,44 @@ class GameUpdater extends EventEmitter {
                     const localHash = await this.calculateHash(destPath);
                     if (localHash === file.hashes.sha1) {
                         processed++;
-                        this.emit('progress', { current: processed, total, type: 'update' });
+                        if (processed % 5 === 0 || processed === total) {
+                            this.emit('progress', { current: processed, total, type: 'update' });
+                        }
                         return;
                     }
                 }
             }
 
-            this.log(`Descargando mod: ${file.path}`);
+            if (!file.downloads || file.downloads.length === 0) {
+                this.log(`ADVERTENCIA: No se encontraron URLs de descarga para ${file.path}`);
+                processed++;
+                return;
+            }
+
+            this.log(`Descargando archivo del pack: ${file.path}`);
             await fs.ensureDir(path.dirname(destPath));
 
             await this.retryOperation(async () => {
                 const response = await axios({
-                    url: file.downloads[0], // Modrinth provides an array of URLs
+                    url: file.downloads[0],
                     method: 'GET',
-                    responseType: 'stream'
+                    responseType: 'stream',
+                    timeout: 30000
                 });
+
                 const writer = fs.createWriteStream(destPath);
                 response.data.pipe(writer);
+
                 await new Promise((resolve, reject) => {
                     writer.on('finish', resolve);
-                    writer.on('error', reject);
+                    writer.on('error', (err) => {
+                        writer.close();
+                        reject(err);
+                    });
+                    response.data.on('error', (err) => {
+                        writer.close();
+                        reject(err);
+                    });
                 });
             });
 
@@ -464,9 +482,16 @@ class GameUpdater extends EventEmitter {
 
         // 3. Handle Overrides
         const overridesDir = path.join(tempDir, 'overrides');
+        const clientOverridesDir = path.join(tempDir, 'client-overrides');
+
         if (await fs.pathExists(overridesDir)) {
-            this.log('Aplicando configuraciones y archivos adicionales...');
+            this.log('Aplicando configuraciones base...');
             await fs.copy(overridesDir, targetGameDir);
+        }
+
+        if (await fs.pathExists(clientOverridesDir)) {
+            this.log('Aplicando configuraciones de cliente...');
+            await fs.copy(clientOverridesDir, targetGameDir);
         }
 
         // Cleanup temp
