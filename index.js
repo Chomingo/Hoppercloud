@@ -83,7 +83,7 @@ function createWindow() {
         },
         backgroundColor: '#121212',
         resizable: true,
-        icon: path.join(__dirname, 'assets', 'icon.png')
+        icon: path.join(__dirname, 'assets', 'logo.png')
     });
 
     mainWindow.loadFile(path.join(__dirname, 'ui', 'index.html'));

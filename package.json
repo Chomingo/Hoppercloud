@@ -23,7 +23,7 @@
     "win": {
       "target": "nsis",
       "artifactName": "hoppersetup-${version}.${ext}",
-      "icon": "assets/icon.png"
+      "icon": "assets/logo.png"
     },
     "files": [
       "ui/**/*",
