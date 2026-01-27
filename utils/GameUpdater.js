@@ -153,9 +153,15 @@ class GameUpdater extends EventEmitter {
 
             if (manifest.mrpack) {
                 try {
-                    await this.handleMrPack(manifest, targetGameDir);
+                    if (Array.isArray(manifest.mrpack)) {
+                        for (const packPath of manifest.mrpack) {
+                            await this.handleMrPack(packPath, manifest.url_base, targetGameDir);
+                        }
+                    } else {
+                        await this.handleMrPack(manifest.mrpack, manifest.url_base, targetGameDir);
+                    }
                 } catch (e) {
-                    this.log(`Error procesando Modpack (.mrpack): ${e.message}`);
+                    this.log(`Error procesando Modpacks (.mrpack): ${e.message}`);
                 }
             }
 
@@ -347,14 +353,14 @@ class GameUpdater extends EventEmitter {
         }
     }
 
-    async handleMrPack(manifest, targetGameDir) {
-        const mrpackRelativePath = manifest.mrpack;
-        const mrpackLocalPath = path.join(targetGameDir, 'modpack.mrpack');
+    async handleMrPack(mrpackRelativePath, urlBase, targetGameDir) {
+        const packFileName = path.basename(mrpackRelativePath);
+        const mrpackLocalPath = path.join(targetGameDir, `.temp_${packFileName}`);
         let mrpackSourcePath;
 
         // 1. Resolve source
         if (mrpackRelativePath.startsWith('http')) {
-            this.log('Descargando archivo .mrpack...');
+            this.log(`Descargando archivo .mrpack: ${packFileName}...`);
             mrpackSourcePath = mrpackLocalPath;
             const response = await axios({
                 url: mrpackRelativePath,
@@ -377,9 +383,9 @@ class GameUpdater extends EventEmitter {
             }
 
             // 3. Fallback to Remote: If not found locally, try relative to the manifest URL
-            if (!await fs.pathExists(mrpackSourcePath) && manifest.url_base) {
-                this.emit('log', 'Archivo .mrpack no encontrado localmente. Intentando descarga remota...');
-                const remoteUrl = encodeURI(`${manifest.url_base}/${mrpackRelativePath}`);
+            if (!await fs.pathExists(mrpackSourcePath) && urlBase) {
+                this.emit('log', `Archivo ${packFileName} no encontrado localmente. Intentando descarga remota...`);
+                const remoteUrl = encodeURI(`${urlBase}/${mrpackRelativePath}`);
 
                 // Reuse download logic
                 mrpackSourcePath = mrpackLocalPath;
