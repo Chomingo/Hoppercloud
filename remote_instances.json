@@ -37,5 +37,15 @@
         "gameDir": "instances/dev",
         "enabled": true,
         "manifestUrl": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/dev/manifest.json"
+    },
+    {
+        "id": "instance_horizon",
+        "name": "Horizon Modpack",
+        "icon": "assets/icon.png",
+        "description": "Pack de Mods Horizon (v1.20.1)",
+        "modsDir": "instances/horizon/mods",
+        "gameDir": "instances/horizon",
+        "enabled": true,
+        "manifestUrl": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/manifest_horizon.json"
     }
 ]

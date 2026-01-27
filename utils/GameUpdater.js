@@ -139,6 +139,17 @@ class GameUpdater extends EventEmitter {
         }
 
         if (manifest.files && Array.isArray(manifest.files)) {
+            // Detect Version Change for cleanup
+            if (this.localManifest && this.localManifest.gameVersion !== manifest.gameVersion) {
+                this.log(`CAMBIO DE VERSIÓN DETECTADO: ${this.localManifest.gameVersion} -> ${manifest.gameVersion}`);
+                this.log('Limpiando carpeta de mods para evitar incompatibilidades...');
+                const modsDir = path.join(targetGameDir, 'mods');
+                if (await fs.pathExists(modsDir)) {
+                    await fs.remove(modsDir);
+                    await fs.ensureDir(modsDir);
+                }
+            }
+
             try {
                 await this.cleanupOldMods(manifest, targetGameDir);
             } catch (e) {
