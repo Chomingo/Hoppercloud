@@ -12,12 +12,12 @@
     "lint": "eslint ."
   },
   "build": {
-    "appId": "com.ombicraft.launcher",
+    "appId": "Josmir",
     "publish": [
       {
         "provider": "github",
-        "owner": "Antaneyes",
-        "repo": "minecraft-launcher-custom"
+        "owner": "Josmir",
+        "repo": "hopper-launcher"
       }
     ],
     "win": {
@@ -39,6 +39,7 @@
   "dependencies": {
     "adm-zip": "^0.5.16",
     "axios": "^1.13.2",
+    "discord-rpc": "^4.0.1",
     "electron-log": "^5.4.3",
     "electron-updater": "^6.6.2",
     "es-object-atoms": "^1.1.1",

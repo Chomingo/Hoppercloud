@@ -38,8 +38,11 @@ async function loginMicrosoft(sender) {
 
         // Check if we have a valid token
         if (token.validate()) {
-            // Return the mclc-compatible auth object
-            return token.mclc();
+            // Return the mclc-compatible auth object + access_token for APIs
+            const authObj = token.mclc();
+            authObj.access_token = token.token; // The MSMC token object contains the Minecraft access token
+            authObj.profile = token.profile; // Include full profile for skins/UUID etc
+            return authObj;
         } else {
             throw new Error('Token validation failed');
         }

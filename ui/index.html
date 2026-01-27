@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hopper Launcher</title>
+    <title>Crystal Launcher</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +21,13 @@
 
         <div class="main-content">
             <header>
-                <h1>HopperLauncher</h1>
+                <div class="header-left">
+                    <div id="player-head-container" class="player-head-container">
+                        <div id="player-head" class="player-head"></div>
+                    </div>
+
+                    <h1 id="header-username">Crystal Launcher</h1>
+                </div>
                 <div class="header-controls">
                     <div id="status-badge" class="badge">Listo</div>
                     <button id="settings-btn" class="console-toggle-btn" title="Configuración"
@@ -45,44 +51,87 @@
             </header>
 
             <main>
-                <!-- Hero Section -->
-                <div class="hero-section">
-                    <h2 id="instance-title"></h2>
-                    <p id="instance-desc">Launcher de Hopper Studios</p>
-                    <button id="update-launcher-btn" class="update-btn hidden">
-                        <span>⚡ Nueva versión disponible</span>
-                    </button>
-                </div>
-
-                <!-- Controls Section -->
-                <div class="controls-section">
-                    <div class="login-row">
-                        <div class="login-mode-switch">
-                            <button id="mode-offline" class="mode-btn active">Offline</button>
-                            <button id="mode-microsoft" class="mode-btn">Microsoft</button>
+                <div class="dashboard-wrapper">
+                    <!-- Top Section: News & Info -->
+                    <div class="dashboard-top">
+                        <!-- News Section -->
+                        <div class="news-container">
+                            <div class="section-header">
+                                <h2>Noticias</h2>
+                            </div>
+                            <div class="news-list">
+                                <!-- Static News Item (Can be made dynamic later) -->
+                                <div class="news-card glass-panel">
+                                    <div class="news-icon-wrap">
+                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#grad1)"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <defs>
+                                                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                    <stop offset="0%" style="stop-color:#00c6ff;stop-opacity:1" />
+                                                    <stop offset="100%" style="stop-color:#0072ff;stop-opacity:1" />
+                                                </linearGradient>
+                                            </defs>
+                                            <path d="M12 2l9 4.9V17L12 22l-9-4.9V6.9L12 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="news-content">
+                                        <h3>Bienvenido a Crystal Launcher</h3>
+                                        <p>Hola, bienvenido al nuevo launcher oficial.</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="user-input" id="offline-input-container">
-                            <input type="text" id="username" placeholder="Nombre de Usuario" autocomplete="off"
-                                spellcheck="false">
+                        <!-- Info/Status Section -->
+                        <div class="info-container">
+                            <div class="info-card glass-panel">
+                                <h3>Crystal Launcher <span class="version-highlight">3.0.0</span></h3>
+                                <p class="status-text">Sistema listo y operativo.</p>
+                            </div>
                         </div>
                     </div>
 
-                    <div id="microsoft-info" class="hidden"
-                        style="text-align: center; margin-bottom: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">
-                        <p>Inicia sesión de forma segura con tu cuenta de Microsoft</p>
+                    <!-- Hidden elements to maintain JS compatibility -->
+                    <h2 id="instance-title" style="display:none;"></h2>
+                    <p id="instance-desc" style="display:none;"></p>
+
+                    <div class="center-actions">
+                        <button id="update-launcher-btn" class="update-btn hidden">
+                            <span>⚡ Nueva versión disponible</span>
+                        </button>
                     </div>
 
-                    <button id="launch-btn" class="launch-btn">
-                        <span class="btn-text">JUGAR</span>
-                        <div class="progress-bar" id="progress-bar"></div>
-                    </button>
+                    <!-- Bottom Control Bar (Restored) -->
+                    <div class="controls-bar-wrapper">
+                        <div class="controls-section glass-panel">
+                            <div class="login-row">
+                                <div class="login-mode-switch">
+                                    <button id="mode-offline" class="mode-btn active">Offline</button>
+                                    <button id="mode-microsoft" class="mode-btn">Microsoft</button>
+                                </div>
 
-                    <button id="retry-btn" class="launch-btn hidden"
-                        style="background: var(--error); margin-top: 10px;">
-                        <span class="btn-text">REINTENTAR ACTUALIZACIÓN</span>
-                    </button>
+                                <div class="user-input" id="offline-input-container">
+                                    <input type="text" id="username" placeholder="Nombre de Usuario" autocomplete="off"
+                                        spellcheck="false">
+                                </div>
+                            </div>
 
+                            <div id="microsoft-info" class="hidden"
+                                style="text-align: center; margin-bottom: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+                                <p>Inicia sesión de forma segura con tu cuenta de Microsoft</p>
+                            </div>
+
+                            <button id="launch-btn" class="launch-btn">
+                                <span class="btn-text">JUGAR</span>
+                                <div class="progress-bar" id="progress-bar"></div>
+                            </button>
+
+                            <button id="retry-btn" class="launch-btn hidden"
+                                style="background: var(--error); margin-top: 10px;">
+                                <span class="btn-text">REINTENTAR ACTUALIZACIÓN</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </main>
 
@@ -116,25 +165,80 @@
 
         <!-- Settings Overlay -->
         <div id="settings-overlay" class="settings-overlay hidden">
-            <div class="settings-modal">
-                <div class="settings-header">
-                    <h3>Configuración</h3>
-                    <button id="close-settings-btn" class="close-btn">✕</button>
-                </div>
-                <div class="settings-content">
-                    <div class="setting-item">
-                        <label for="ram-slider">Memoria RAM (Java)</label>
-                        <div class="range-container">
-                            <input type="range" id="ram-slider" min="2" max="16" step="1" value="4">
-                            <span id="ram-value">4 GB</span>
+            <div class="settings-modal flex-modal">
+                <div class="settings-content-wrap">
+                    <div class="settings-header">
+                        <h3>Configuración</h3>
+                        <button id="close-settings-btn" class="close-btn">✕</button>
+                    </div>
+                    <div class="settings-content">
+                        <div class="setting-item">
+                            <label for="ram-slider">Memoria RAM (Java)</label>
+                            <div class="range-container">
+                                <input type="range" id="ram-slider" min="2" max="16" step="1" value="4">
+                                <span id="ram-value">4 GB</span>
+                            </div>
+                            <p class="setting-desc">Asigna más memoria si usas muchos mods.</p>
                         </div>
-                        <p class="setting-desc">Asigna más memoria si usas muchos mods.</p>
+
+                        <!-- Cleanup Section -->
+                        <div class="setting-item">
+                            <label>Mantenimiento</label>
+                            <p class="setting-desc">Borra archivos temporales y basura para liberar espacio.</p>
+                            <div class="cleanup-actions">
+                                <button id="cleanup-btn" class="badge vivid-btn"
+                                    style="cursor: pointer; padding: 10px 15px; margin-top: 5px; background: linear-gradient(135deg, #ff416c, #ff4b2b) !important; border: none; font-weight: bold; width: 100%; transition: all 0.3s ease;">
+                                    🧹 Limpieza Rápida
+                                </button>
+                                <p id="cleanup-status"
+                                    style="font-size: 0.8em; margin-top: 5px; color: var(--text-secondary); text-align: center; height: 1.2em;">
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Skin Management -->
+                        <div class="setting-item" id="skin-management-section">
+                            <label>Apariencia (Skin)</label>
+                            <p class="setting-desc">Personaliza tu apariencia en el juego.</p>
+                            <div class="skin-actions">
+                                <button id="upload-skin-btn" class="badge"
+                                    style="cursor: pointer; padding: 8px 12px; margin-top: 5px;">
+                                    📤 Cambiar Skin (.png)
+                                </button>
+                                <input type="file" id="skin-file-input" accept=".png" style="display: none;">
+                            </div>
+                        </div>
+
+                        <!-- Background Management -->
+                        <div class="setting-item">
+                            <label>Fondo del Launcher</label>
+                            <p class="setting-desc">Personaliza el fondo con tus propias imágenes.</p>
+                            <div class="skin-actions">
+                                <button id="upload-bg-btn" class="badge"
+                                    style="cursor: pointer; padding: 8px 12px; margin-top: 5px;">
+                                    🖼️ Seleccionar Fondo
+                                </button>
+                                <button id="reset-bg-btn" class="badge"
+                                    style="cursor: pointer; padding: 8px 12px; margin-top: 5px; background: rgba(255, 59, 48, 0.2); color: #ff3b30; border-color: rgba(255, 59, 48, 0.3);">
+                                    🔄 Restablecer Predeterminado
+                                </button>
+                                <input type="file" id="bg-file-input" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="skin-preview-wrap">
+                    <canvas id="skin-viewer-canvas"></canvas>
+                    <div class="skin-viewer-controls">
+                        <span class="badge" id="skin-model-name">Classic</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="skin2D.js"></script>
+    <script src="skinview3d.bundle.min.js"></script>
     <script src="renderer.js"></script>
 </body>
 

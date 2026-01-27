@@ -15,12 +15,35 @@ if (gameDirArgIndex !== -1 && args[gameDirArgIndex + 1]) {
 // Configure autoUpdater
 autoUpdater.autoDownload = false;
 const { log, consoleLog, clearLogs } = require('./utils/logger');
+const discord = require('./utils/discord');
+
+let lastLogTime = 0;
+function logToConsole(message, type = 'info') {
+    const isSpammy = message.includes('Descargando') || message.includes('Verificando') || message.includes('Eliminando') || message.includes('Actualizando');
+    const now = Date.now();
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        // Throttling para logs de actualización masiva
+        if (!isSpammy || (now - lastLogTime > 150) || type === 'error') {
+            mainWindow.webContents.send('log', message);
+            if (isSpammy) lastLogTime = now;
+        }
+    }
+
+    if (type === 'error') {
+        consoleLog.error(message);
+    } else if (type === 'warn') {
+        consoleLog.warn(message);
+    } else {
+        consoleLog.info(message);
+    }
+}
 autoUpdater.logger = log;
 
 // ... (existing code) ...
 
 ipcMain.on('start-launcher-update', () => {
-    if (mainWindow) mainWindow.webContents.send('log', 'Iniciando descarga de actualización...');
+    logToConsole('Iniciando descarga de actualización...');
     autoUpdater.downloadUpdate();
 });
 
@@ -53,6 +76,7 @@ function createWindow() {
         minWidth: 800,
         minHeight: 600,
         frame: true,
+        transparent: false,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -73,7 +97,10 @@ function createWindow() {
     });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+    discord.init();
+    createWindow();
+});
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
@@ -135,11 +162,65 @@ async function loadInstances() {
 }
 
 // IPC Handlers
+ipcMain.handle('trigger-cleanup', async () => {
+    const { cleanupGameFiles } = require('./utils/cleanup');
+    return await cleanupGameFiles();
+});
+
 ipcMain.handle('get-instances', async () => {
     if (instances.length === 0) {
         return await loadInstances();
     }
     return instances;
+});
+
+ipcMain.handle('upload-skin', async (event, { filePath, accessToken, username }) => {
+    const axios = require('axios');
+    const FormData = require('form-data');
+    const fs = require('fs-extra');
+
+    try {
+        if (accessToken) {
+            // Microsoft Account - Upload to Mojang
+            const form = new FormData();
+            form.append('variant', 'classic');
+            form.append('file', fs.createReadStream(filePath));
+
+            const response = await axios.post('https://api.minecraftservices.com/minecraft/profile/skins', form, {
+                headers: {
+                    ...form.getHeaders(),
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+
+            if (response.status === 200 || response.status === 204) {
+                return { success: true, mode: 'microsoft' };
+            } else {
+                return { success: false, error: `API returned status ${response.status}` };
+            }
+        } else {
+            // Offline Account - Save locally
+            if (!username) return { success: false, error: 'Nombre de usuario no proporcionado' };
+
+            // 1. Save to Launcher Cache (for UI)
+            const launcherSkinsDir = path.join(GAME_ROOT, 'skins');
+            await fs.ensureDir(launcherSkinsDir);
+            const launcherDest = path.join(launcherSkinsDir, `${username}.png`);
+            await fs.copy(filePath, launcherDest);
+
+            // 2. Save to CustomSkinLoader path (for in-game visibility if mod is present)
+            // We save it to the global root as many mods look there or we can sync it.
+            const cslDir = path.join(GAME_ROOT, 'CustomSkinLoader', 'LocalSkin', 'skins');
+            await fs.ensureDir(cslDir);
+            await fs.copy(filePath, path.join(cslDir, `${username}.png`));
+
+            log.info(`Skin local guardada para ${username} en cache y CustomSkinLoader.`);
+            return { success: true, mode: 'offline', path: launcherDest };
+        }
+    } catch (error) {
+        log.error(`Skin upload error: ${error.message}`);
+        return { success: false, error: error.response?.data?.errorMessage || error.message };
+    }
 });
 
 ipcMain.on('check-updates', async (event, { instanceId } = {}) => {
@@ -152,15 +233,9 @@ ipcMain.on('check-updates', async (event, { instanceId } = {}) => {
     }
 
     // Setup listeners for this update session
-    const onLog = (msg) => {
-        sender.send('log', msg);
-        consoleLog.info(msg);
-    };
+    const onLog = (msg) => logToConsole(msg, 'info');
     const onProgress = (data) => sender.send('progress', data);
-    const onError = (msg) => {
-        sender.send('error', msg);
-        consoleLog.error(msg);
-    };
+    const onError = (msg) => logToConsole(msg, 'error');
 
     gameUpdater.on('log', onLog);
     gameUpdater.on('progress', onProgress);
@@ -217,27 +292,34 @@ ipcMain.on('launch-game', async (event, { username, mode, memory, instanceId }) 
     const sender = event.sender;
 
     // Helper for logging
-    const logToConsole = (msg) => {
-        sender.send('log', msg);
-        consoleLog.info(msg);
-    };
+    const logLocal = (msg, type = 'info') => logToConsole(msg, type);
 
     try {
         let auth = null;
 
         if (mode === 'microsoft') {
             sender.send('status', 'Iniciando Sesión');
-            logToConsole('Iniciando sesión con Microsoft...');
+            logLocal('Iniciando sesión con Microsoft...');
             auth = await loginMicrosoft(sender);
-            logToConsole(`Sesión iniciada como: ${auth.name}`);
+            logLocal(`Sesión iniciada como: ${auth.name}`);
+
+            // Send account info back for skin display
+            sender.send('auth-success', {
+                name: auth.name,
+                uuid: auth.uuid,
+                accessToken: auth.access_token // We'll update auth.js to include this
+            });
         }
 
         sender.send('status', 'Iniciando');
-        logToConsole('Iniciando juego...');
+        logLocal('Iniciando juego...');
 
         isGameRunning = true;
         // Launch Game (updates are assumed to be done)
-        await launchGame(username, sender, auth, memory, (msg) => consoleLog.info(msg), instanceId);
+        const selectedInstanceName = (await require('./utils/instances')).find(i => i.id === instanceId)?.name || 'Minecraft';
+        discord.setPlayingStatus(selectedInstanceName);
+
+        await launchGame(username, sender, auth, memory, (msg) => logToConsole(msg), instanceId);
 
         sender.send('status', 'Jugando');
     } catch (error) {
@@ -250,6 +332,7 @@ ipcMain.on('launch-game', async (event, { username, mode, memory, instanceId }) 
 
 ipcMain.on('launch-close', () => {
     isGameRunning = false;
+    discord.setMenuStatus();
 });
 
 ipcMain.on('launch-error', () => {

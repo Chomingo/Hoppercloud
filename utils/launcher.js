@@ -24,10 +24,14 @@ async function launchGame(username, sender, auth = null, memory = '4G', logCallb
     const minMemory = manifest.minMemory || '2G';
 
     // Authorization (offline mode for now, or passed username)
+    // Generate a consistent offline UUID from the username
+    const crypto = require('crypto');
+    const offlineUuid = crypto.createHash('md5').update('OfflinePlayer:' + username).digest('hex');
+
     const token = {
         access_token: 'token',
         client_token: 'token',
-        uuid: 'uuid',
+        uuid: offlineUuid,
         name: username,
         user_properties: '{}',
         meta: {

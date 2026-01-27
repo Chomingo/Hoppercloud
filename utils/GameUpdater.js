@@ -244,31 +244,56 @@ class GameUpdater extends EventEmitter {
                     }
                 }
 
-                // Check existing file
+                let skipDownload = false;
+                let verificationMethod = '';
+
+                // Tier 1: Check local manifest cache (Highest Performance)
+                const localFile = this.localManifest && this.localManifest.files
+                    ? this.localManifest.files.find(f => f.path === file.path)
+                    : null;
+
                 if (await fs.pathExists(destPath)) {
-                    if (file.sha1) {
-                        // OPTIMIZATION: Check local manifest first to avoid heavy hashing
-                        const localFile = this.localManifest && this.localManifest.files
-                            ? this.localManifest.files.find(f => f.path === file.path)
-                            : null;
-
-                        if (localFile && localFile.sha1 === file.sha1) {
-                            // If it's in the manifest and the hash matches, trust it and skip hashing disk file
-                            processed++;
-                            this.emit('progress', { current: processed, total, type: 'update' });
-                            return;
+                    if (localFile && file.sha1 && localFile.sha1 === file.sha1) {
+                        skipDownload = true;
+                        verificationMethod = 'caché';
+                    } else if (file.size !== undefined) {
+                        // Tier 2: Check file size (Medium Performance)
+                        const stats = await fs.stat(destPath);
+                        if (stats.size === file.size) {
+                            if (!file.sha1) {
+                                skipDownload = true;
+                                verificationMethod = 'tamaño';
+                            } else {
+                                // Tier 3: Verify SHA1 only if size matches but not in cache
+                                this.log(`Verificando integridad: ${fileName}`);
+                                const localHash = await this.calculateHash(destPath);
+                                if (localHash === file.sha1) {
+                                    skipDownload = true;
+                                    verificationMethod = 'hash';
+                                }
+                            }
                         }
-
+                    } else if (file.sha1) {
+                        // Fallback Tier 3: Mandatory hash check if no size or cache
+                        this.log(`Verificando integridad: ${fileName}`);
                         const localHash = await this.calculateHash(destPath);
                         if (localHash === file.sha1) {
-                            processed++;
-                            this.emit('progress', { current: processed, total, type: 'update' });
-                            return;
+                            skipDownload = true;
+                            verificationMethod = 'hash';
                         }
                     }
                 }
 
-                this.log(`Descargando: ${file.path}`);
+                if (skipDownload) {
+                    processed++;
+                    // Emitir progreso con throttling para no saturar el canal IPC
+                    if (processed === total || processed % 5 === 0) {
+                        this.emit('progress', { current: processed, total, type: 'update' });
+                    }
+                    return;
+                }
+
+                this.log(`Actualizando: ${file.path}`);
                 await fs.ensureDir(path.dirname(destPath));
 
                 await this.retryOperation(async () => {

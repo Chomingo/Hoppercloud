@@ -1,9 +1,72 @@
-const { ipcRenderer, shell } = require('electron');
+const { ipcRenderer, shell, webUtils } = require('electron');
 const path = require('path');
 
 // Global State
 let instances = [];
 let selectedInstance = null;
+let currentMicrosoftAccount = null;
+let skinProcessor = null;
+let skinViewer = null;
+let loginMode = 'offline'; // Moved to top to avoid ReferenceError
+try {
+    skinProcessor = new Skin2D();
+} catch (e) {
+    console.error('Skin2D could not be initialized:', e);
+}
+
+function initSkinViewer() {
+    try {
+        const canvas = document.getElementById('skin-viewer-canvas');
+        if (!canvas) return;
+
+        skinViewer = new skinview3d.SkinViewer({
+            canvas: canvas,
+            width: 260,
+            height: 320,
+            skin: 'assets/steve.png'
+        });
+
+        // Setup controls
+        skinViewer.controls.enableRotate = true;
+        skinViewer.controls.enableZoom = false; // Zoom can be annoying in a small modal
+        skinViewer.background = null; // Transparent
+
+        // Idle animation
+        skinViewer.animations.add(skinview3d.IdleAnimation);
+
+        console.log('SkinViewer 3D initialized');
+    } catch (e) {
+        console.error('Error initializing SkinViewer:', e);
+    }
+}
+
+async function detectSkinModel(skinSource) {
+    try {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                if (img.height === 64) {
+                    // Check the pixel that differentiates Slim from Classic
+                    const pixelData = ctx.getImageData(54, 20, 1, 1).data;
+                    const isSlim = pixelData[3] === 0;
+                    resolve(isSlim ? 'slim' : 'classic');
+                } else {
+                    resolve('classic');
+                }
+            };
+            img.onerror = () => resolve('classic');
+            img.src = skinSource;
+        });
+    } catch (e) {
+        return 'classic';
+    }
+}
 
 // Load Instances Asynchronously
 async function initInstances() {
@@ -43,6 +106,12 @@ const consoleOutput = document.getElementById('console-output');
 const progressBar = document.getElementById('progress-bar');
 const statusBadge = document.getElementById('status-badge');
 const btnText = document.querySelector('.btn-text');
+const playerHead = document.getElementById('player-head');
+
+// Skin UI Elements
+const uploadSkinBtn = document.getElementById('upload-skin-btn');
+const skinFileInput = document.getElementById('skin-file-input');
+const skinManagementSection = document.getElementById('skin-management-section');
 
 // Instance UI Elements
 const sidebar = document.getElementById('sidebar');
@@ -110,12 +179,101 @@ function triggerUpdate(instanceId) {
     ipcRenderer.send('check-updates', { instanceId });
 }
 
-// (Initialization moved to initInstances)
+const headerUsername = document.getElementById('header-username');
+
+function updateHeaderTitle(name) {
+    if (headerUsername) {
+        headerUsername.textContent = name && name.trim().length > 0 ? name : 'Crystal Launcher';
+    }
+}
 
 // Load saved username
 const savedUsername = localStorage.getItem('savedUsername');
 if (savedUsername && usernameInput) {
     usernameInput.value = savedUsername;
+    updatePlayerHead(savedUsername);
+    updateHeaderTitle(savedUsername);
+}
+
+// Initial UI state for skins
+try {
+    if (loginMode === 'offline' && skinManagementSection) {
+        skinManagementSection.classList.remove('hidden');
+    }
+} catch (e) {
+    console.error('Error setting initial UI state:', e);
+}
+
+// Watch username changes
+if (usernameInput) {
+    usernameInput.addEventListener('input', () => {
+        if (loginMode === 'offline') {
+            updatePlayerHead(usernameInput.value);
+            updateHeaderTitle(usernameInput.value);
+        }
+    });
+}
+
+async function updatePlayerHead(usernameOrSkin, manualSkinSource = null) {
+    if (!playerHead) return;
+    try {
+        let skinSource = manualSkinSource;
+
+        if (!skinSource) {
+            if (loginMode === 'offline') {
+                if (!usernameOrSkin) {
+                    playerHead.style.backgroundImage = "url('assets/steve.png')";
+                    return;
+                }
+
+                // Sync with utils/constants.js
+                const appData = process.env.APPDATA || (process.platform === 'darwin' ? path.join(process.env.HOME, 'Library', 'Application Support') : path.join(process.env.HOME, '.local', 'share'));
+                const gameRoot = process.env.OMBICRAFT_GAME_ROOT || path.join(appData, '.minecraft_server_josh');
+                const localSkinPath = path.join(gameRoot, 'skins', `${usernameOrSkin}.png`);
+
+                const fs = require('fs-extra');
+                if (await fs.pathExists(localSkinPath)) {
+                    // Use base64 for local files to avoid file:// protocol issues/caching
+                    const buffer = await fs.readFile(localSkinPath);
+                    skinSource = `data:image/png;base64,${buffer.toString('base64')}`;
+                } else {
+                    // Use mineskin.eu as fallback for offline
+                    skinSource = `https://mineskin.eu/skin/${usernameOrSkin}`;
+                }
+            } else {
+                // For Microsoft, use mineskin as placeholder/fallback
+                skinSource = `https://mineskin.eu/skin/${usernameOrSkin}`;
+            }
+        }
+
+        if (skinProcessor) {
+            try {
+                // Extract face using Skin2D
+                const headDataUrl = await skinProcessor.getHead(skinSource);
+                playerHead.style.backgroundImage = `url('${headDataUrl}')`;
+            } catch (err) {
+                console.warn('SkinProcessor failed, falling back to raw helm API:', err);
+                playerHead.style.backgroundImage = `url('https://mineskin.eu/helm/${usernameOrSkin}')`;
+            }
+        } else {
+            playerHead.style.backgroundImage = `url('https://mineskin.eu/helm/${usernameOrSkin}')`;
+        }
+
+        // Update 3D Viewer if available
+        if (skinViewer && skinSource) {
+            skinViewer.loadSkin(skinSource);
+
+            // Auto-detect model
+            detectSkinModel(skinSource).then(model => {
+                if (skinViewer) skinViewer.model = model;
+                const label = document.getElementById('skin-model-name');
+                if (label) label.textContent = model.charAt(0).toUpperCase() + model.slice(1);
+            });
+        }
+    } catch (e) {
+        console.error('Error updating player head:', e);
+        playerHead.style.backgroundImage = "url('assets/steve.png')";
+    }
 }
 
 // Set Version dynamically
@@ -123,6 +281,10 @@ try {
     const packageJson = require('../package.json');
     const versionText = document.getElementById('version-text');
     if (versionText) versionText.textContent = `v${packageJson.version}`;
+
+    // Update Dashboard Info Card Version
+    const versionHighlight = document.querySelector('.version-highlight');
+    if (versionHighlight) versionHighlight.textContent = packageJson.version;
 } catch (e) {
     console.error('Error loading version:', e);
 }
@@ -221,8 +383,6 @@ const modeMicrosoftBtn = document.getElementById('mode-microsoft');
 const offlineInputContainer = document.getElementById('offline-input-container');
 const microsoftInfo = document.getElementById('microsoft-info');
 
-let loginMode = 'offline';
-
 if (modeOfflineBtn) {
     modeOfflineBtn.addEventListener('click', () => {
         loginMode = 'offline';
@@ -231,6 +391,14 @@ if (modeOfflineBtn) {
         if (offlineInputContainer) offlineInputContainer.classList.remove('hidden');
         if (microsoftInfo) microsoftInfo.classList.add('hidden');
         if (btnText) btnText.textContent = 'JUGAR';
+
+        // Update head for offline user
+        const currentName = usernameInput ? usernameInput.value : '';
+        updatePlayerHead(currentName);
+        updateHeaderTitle(currentName);
+
+        // Show skin management even in offline mode
+        if (skinManagementSection) skinManagementSection.classList.remove('hidden');
     });
 }
 
@@ -242,6 +410,80 @@ if (modeMicrosoftBtn) {
         if (offlineInputContainer) offlineInputContainer.classList.add('hidden');
         if (microsoftInfo) microsoftInfo.classList.remove('hidden');
         if (btnText) btnText.textContent = 'INICIAR SESIÓN Y JUGAR';
+
+        if (currentMicrosoftAccount) {
+            // Use official skin if available
+            const skinBase64 = currentMicrosoftAccount.profile?.skins?.[0]?.base64;
+            updatePlayerHead(currentMicrosoftAccount.name, skinBase64 ? `data:image/png;base64,${skinBase64}` : null);
+
+            // Hide skin management for premium (as requested: "solo para no premiums")
+            if (skinManagementSection) skinManagementSection.classList.add('hidden');
+        } else {
+            playerHead.style.backgroundImage = "url('assets/steve.png')";
+            if (skinManagementSection) skinManagementSection.classList.add('hidden');
+        }
+    });
+}
+
+// Skin Upload Logic
+if (uploadSkinBtn && skinFileInput) {
+    uploadSkinBtn.addEventListener('click', () => {
+        skinFileInput.click();
+    });
+
+    skinFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const username = usernameInput ? usernameInput.value : '';
+        if (loginMode === 'offline' && !username) {
+            log('Error: Debes ingresar un nombre de usuario para asignar la skin.');
+            return;
+        }
+
+        if (loginMode === 'microsoft' && !currentMicrosoftAccount) {
+            log('Error: Debes iniciar sesión con Microsoft para cambiar tu skin oficial.');
+            return;
+        }
+
+        log(loginMode === 'microsoft' ? `Subiendo skin a Mojang: ${file.name}...` : `Guardando skin local: ${file.name}...`);
+
+        // In newer Electron (like v39), file.path is often disabled.
+        // We use webUtils.getPathForFile if available.
+        const filePath = webUtils ? webUtils.getPathForFile(file) : file.path;
+
+        if (!filePath) {
+            log('Error: No se pudo obtener la ruta del archivo. Intenta ejecutar como administrador o verifica los permisos.');
+            uploadSkinBtn.disabled = false;
+            uploadSkinBtn.textContent = '📤 Cambiar Skin (.png)';
+            return;
+        }
+
+        uploadSkinBtn.disabled = true;
+        uploadSkinBtn.textContent = '⌛ Subiendo...';
+
+        try {
+            const result = await ipcRenderer.invoke('upload-skin', {
+                filePath: filePath,
+                accessToken: loginMode === 'microsoft' ? currentMicrosoftAccount.accessToken : null,
+                username: username
+            });
+
+            if (result.success) {
+                log(result.mode === 'microsoft' ? '✅ Skin actualizada en Mojang correctamente.' : '✅ Skin local guardada correctamente.');
+                // Refresh head
+                const nameToRefresh = loginMode === 'microsoft' ? currentMicrosoftAccount.name : username;
+                setTimeout(() => updatePlayerHead(nameToRefresh), result.mode === 'microsoft' ? 3000 : 500);
+            } else {
+                log(`❌ Error al subir skin: ${result.error}`);
+            }
+        } catch (err) {
+            log(`❌ Error crítico al subir skin: ${err.message}`);
+        } finally {
+            uploadSkinBtn.disabled = false;
+            uploadSkinBtn.textContent = '📤 Cambiar Skin (.png)';
+            skinFileInput.value = '';
+        }
     });
 }
 
@@ -304,6 +546,18 @@ if (retryBtn) {
         ipcRenderer.send('check-updates', { instanceId: selectedInstance ? selectedInstance.id : 'default' });
     });
 }
+
+ipcRenderer.on('auth-success', (event, account) => {
+    currentMicrosoftAccount = account;
+    if (loginMode === 'microsoft') {
+        const skinBase64 = account.profile?.skins?.[0]?.base64;
+        updatePlayerHead(account.name, skinBase64 ? `data:image/png;base64,${skinBase64}` : null);
+        updateHeaderTitle(account.name);
+
+        // Ensure section is hidden for premium
+        if (skinManagementSection) skinManagementSection.classList.add('hidden');
+    }
+});
 
 ipcRenderer.on('error', (event, error) => {
     log(`Error: ${error}`);
@@ -383,4 +637,128 @@ ipcRenderer.on('launcher-update-ready', () => {
 });
 
 // Start initialization
-initInstances();
+initInstances().catch(e => {
+    console.error('Critical error during initialization:', e);
+    log('Error crítico al iniciar el launcher.');
+});
+if (typeof skinview3d !== 'undefined') {
+    initSkinViewer();
+}
+
+// Quick Cleanup Logic
+const cleanupBtn = document.getElementById('cleanup-btn');
+const cleanupStatus = document.getElementById('cleanup-status');
+
+if (cleanupBtn) {
+    cleanupBtn.addEventListener('click', async () => {
+        cleanupBtn.disabled = true;
+        cleanupBtn.style.opacity = '0.7';
+        cleanupStatus.textContent = 'Limpiando archivos basura...';
+        cleanupStatus.style.color = 'var(--accent)';
+
+        try {
+            const result = await ipcRenderer.invoke('trigger-cleanup');
+            if (result.success) {
+                cleanupStatus.textContent = `¡Limpieza exitosa! Se liberaron ${result.spaceFreedMB} MB.`;
+                cleanupStatus.style.color = '#4CAF50';
+            } else {
+                cleanupStatus.textContent = `Error: ${result.error}`;
+                cleanupStatus.style.color = '#f44336';
+            }
+        } catch (error) {
+            cleanupStatus.textContent = 'Error al ejecutar la limpieza.';
+            cleanupStatus.style.color = '#f44336';
+        }
+
+
+        setTimeout(() => {
+            cleanupBtn.disabled = false;
+            cleanupBtn.style.opacity = '1';
+        }, 3000);
+    });
+}
+
+// Background Management Logic
+const uploadBgBtn = document.getElementById('upload-bg-btn');
+const resetBgBtn = document.getElementById('reset-bg-btn');
+const bgFileInput = document.getElementById('bg-file-input');
+
+// Initialize background
+(async () => {
+    try {
+        const savedBg = localStorage.getItem('customBackground');
+        if (savedBg && savedBg !== 'default') {
+            document.body.style.backgroundImage = `url('${savedBg.replace(/\\/g, '/')}')`;
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = 'center';
+        }
+    } catch (e) {
+        console.error('Error loading background:', e);
+    }
+})();
+
+if (uploadBgBtn && bgFileInput) {
+    uploadBgBtn.addEventListener('click', () => {
+        bgFileInput.click();
+    });
+
+    bgFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const fs = require('fs-extra');
+
+        try {
+            // Using webUtils or fallback for path
+            const filePath = webUtils ? webUtils.getPathForFile(file) : file.path;
+
+            if (!filePath) {
+                log('Error: No se pudo leer la imagen. Permisos insuficientes.');
+                return;
+            }
+
+            // Create target directory
+            const backgroundsDir = path.join(__dirname, 'backgrounds');
+            await fs.ensureDir(backgroundsDir);
+
+            // Generate unique name to avoid cache issues or collisions
+            const ext = path.extname(filePath);
+            const fileName = `bg_${Date.now()}${ext}`;
+            const targetPath = path.join(backgroundsDir, fileName);
+
+            // Copy file
+            await fs.copy(filePath, targetPath);
+
+            // Apply background
+            // We use file:// protocol for local files
+            const bgUrl = `file://${targetPath.replace(/\\/g, '/')}`;
+
+            document.body.style.backgroundImage = `url('${bgUrl}')`;
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = 'center';
+
+            // Save preference
+            localStorage.setItem('customBackground', bgUrl);
+
+            log('✅ Fondo actualizado correctamente.');
+
+            // Cleanup old files if necessary? (Skipped for now to keep history if needed later)
+        } catch (error) {
+            log(`❌ Error al cambiar el fondo: ${error.message}`);
+            console.error(error);
+        } finally {
+            bgFileInput.value = '';
+        }
+    });
+}
+
+if (resetBgBtn) {
+    resetBgBtn.addEventListener('click', () => {
+        localStorage.removeItem('customBackground');
+        document.body.style.backgroundImage = ''; // Falls back to CSS default
+        document.body.style.backgroundSize = '';
+        document.body.style.backgroundPosition = '';
+        log('🔄 Fondo restablecido al predeterminado.');
+    });
+}
+
