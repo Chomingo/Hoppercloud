@@ -1,8 +1,8 @@
 {
-  "name": "hopper-launcher",
-  "productName": "Hopper Launcher",
+  "name": "horizon-launcher",
+  "productName": "Horizon Launcher",
   "version": "1.1.1",
-  "description": "Hopper Launcher",
+  "description": "Horizon Launcher",
   "author": "Josmir",
   "scripts": {
     "start": "electron .",
@@ -22,7 +22,7 @@
     ],
     "win": {
       "target": "nsis",
-      "artifactName": "hoppersetup-${version}.${ext}",
+      "artifactName": "horizonsetup-${version}.${ext}",
       "icon": "assets/logo.png"
     },
     "files": [

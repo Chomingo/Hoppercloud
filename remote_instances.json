@@ -42,7 +42,7 @@
         "id": "instance_horizon",
         "name": "Horizon Modpack",
         "icon": "assets/icon.png",
-        "description": "Pack de Mods Horizon (v1.20.1)",
+        "description": "Modpack de Civilization Event",
         "modsDir": "instances/horizon/mods",
         "gameDir": "instances/horizon",
         "enabled": true,

@@ -1,4 +1,4 @@
-# 🛠️ Guía del Administrador - Hopper Launcher
+# 🛠️ Guía del Administrador - Horizon Launcher
 
 Esta guía contiene todo lo que necesitas saber para operar, actualizar y personalizar tu launcher.
 

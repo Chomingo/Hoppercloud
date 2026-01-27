@@ -196,7 +196,7 @@ const headerUsername = document.getElementById('header-username');
 
 function updateHeaderTitle(name) {
     if (headerUsername) {
-        headerUsername.textContent = name && name.trim().length > 0 ? name : 'Crystal Launcher';
+        headerUsername.textContent = name && name.trim().length > 0 ? name : 'Horizon Launcher';
     }
 }
 

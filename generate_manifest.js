@@ -80,7 +80,7 @@ const manifest = {
     version: MANIFEST_VERSION,
     gameVersion: GAME_VERSION,
     launcherVersion: LAUNCHER_VERSION,
-    launcherUrl: `https://github.com/${REPO_USER}/${REPO_NAME}/releases/download/v${LAUNCHER_VERSION}/hoppersetup-${LAUNCHER_VERSION}.exe`,
+    launcherUrl: `https://github.com/${REPO_USER}/${REPO_NAME}/releases/download/v${LAUNCHER_VERSION}/horizonsetup-${LAUNCHER_VERSION}.exe`,
     files
 };
 
