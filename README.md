@@ -1,14 +1,13 @@
-# OmbiCraft Launcher
+# Horizon launcher
 
-Un launcher personalizado para servidores de Minecraft con actualizaciones automáticas, soporte para cuentas autenticas y gestión de mods.
+launcher personalizado para servidores de Minecraft, soporte para cuentas premium y gestión de modpacks
 
 ## Características
-- 🔄 **Auto-actualización de Mods/Configs**: Sincroniza automáticamente los archivos del cliente con tu servidor.
-- 🚀 **Auto-actualización del Launcher**: Se actualiza a sí mismo usando GitHub Releases.
-- 🔑 **Login de Microsoft**: Soporte nativo para cuentas autenticas.
-- ⚙️ **Configuración**: Selector de RAM y opciones de lanzamiento.
-- 🛠️ **Modo Desarrollador**: Logs detallados en `logs/console.log` y herramientas de depuración.
-- 🔄 **Resiliencia**: Botón de reintento automático en caso de fallos de actualización.
+- **Auto-actualización de Mods/Configs**: los archivos se actualizando automáticamente descargando nuevos mods desde el repositorio que selecciones 
+-  **Auto-actualización del Launcher**: Se actualiza a sí mismo usando GitHub Releases.
+- **Login de Microsoft**: Soporte para cuentas premium de minecraft
+- **Configuración**: Selector de RAM y opciones de Optimización antes de lanzar.
+-  **Modo Desarrollador**: Logs detallados en `logs/console.log`.
 
 ## Instalación (Desarrollo)
 
@@ -24,21 +23,19 @@ Un launcher personalizado para servidores de Minecraft con actualizaciones autom
 
 ## Publicar Actualizaciones
 
-### Actualizar Contenido (Mods/Configs)
+### Actualizar (Modpacks/Configs)
 Para actualizar los archivos del juego sin cambiar la versión del launcher:
 ```bash
 node update_server.js
 ```
 
 ### Actualizar el Launcher (Nueva Versión)
-Para lanzar una nueva versión del ejecutable (`.exe`):
+Para lanzar una nueva versión del launcher (`.exe`):
 ```bash
 node release.js
 ```
-Este script automatiza el versionado, compilación y creación de la Release en GitHub.
 
 ## Documentación
 
 - [📘 Guía del Administrador (Comandos y Actualizaciones)](GUIA_ADMINISTRADOR.md)
 - [📜 Instrucciones rápidas para Modpacks](INSTRUCCIONES_MODPACKS.txt)
-- [🏗️ Plan de Implementación de Perfiles Dinámicos](C:\Users\Admin\.gemini\antigravity\brain\f6ecf175-8984-4720-aa6e-f4175163d9ec\implementation_plan.md)
