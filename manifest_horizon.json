@@ -77,6 +77,78 @@
             "size": 85
         },
         {
+            "path": "mods/cloth-config-15.0.140-fabric.jar",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/cloth-config-15.0.140-fabric.jar",
+            "sha1": "5d82342a2df53fd6df712bfdd583a811572918a4",
+            "size": 1157166
+        },
+        {
+            "path": "mods/cpa-5.9.2+1.21.1-fabric.jar",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/cpa-5.9.2+1.21.1-fabric.jar",
+            "sha1": "73503906a40b9d1b1c5f66e1af256b4e78762e0a",
+            "size": 376584
+        },
+        {
+            "path": "mods/fabric-api-0.116.13+1.21.1.jar",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/fabric-api-0.116.13+1.21.1.jar",
+            "sha1": "a8107fd8fd3e805d9ca87453e36b4556d92b55da",
+            "size": 2427135
+        },
+        {
+            "path": "mods/fancymenu_fabric_3.9.8_MC_1.21.1.jar",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/fancymenu_fabric_3.9.8_MC_1.21.1.jar",
+            "sha1": "72cf81b069075a39996d4b2360ffca3299ab539e",
+            "size": 25757227
+        },
+        {
+            "path": "mods/geckolib-fabric-1.21.1-4.9.2.jar",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/geckolib-fabric-1.21.1-4.9.2.jar",
+            "sha1": "b95b1d631baeada54c6773ca8f6ede40d57fea46",
+            "size": 660416
+        },
+        {
+            "path": "mods/handcrafted-fabric-1.21.1-4.0.3 (1).jar",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/handcrafted-fabric-1.21.1-4.0.3 (1).jar",
+            "sha1": "a9579fecd7ed429c282be21d5c921d220197acc6",
+            "size": 7127377
+        },
+        {
+            "path": "mods/PlayerAnimationLibFabric-1.1.5+mc.1.21.1.jar",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/PlayerAnimationLibFabric-1.1.5+mc.1.21.1.jar",
+            "sha1": "5005c388b026a9fa0c9e6106c17c8cd212929027",
+            "size": 1155694
+        },
+        {
+            "path": "mods/resourcefullib-fabric-1.21-3.0.12 (1).jar",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/resourcefullib-fabric-1.21-3.0.12 (1).jar",
+            "sha1": "cb67e1302b5116953f45556cc61dbcf40d986ecd",
+            "size": 485586
+        },
+        {
+            "path": "mods/sodium-fabric-0.8.12+mc1.21.1.jar",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/sodium-fabric-0.8.12+mc1.21.1.jar",
+            "sha1": "70381d969eb63c0aa09dc581ef4b9a79782c0123",
+            "size": 1573180
+        },
+        {
+            "path": "mods/sodiumoptionsapi-fabric-1.0.10-1.21.1.jar",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/sodiumoptionsapi-fabric-1.0.10-1.21.1.jar",
+            "sha1": "ca8c29ad2481ab5fe81095181541d183fa7faf19",
+            "size": 903592
+        },
+        {
+            "path": "mods/voicechat-fabric-1.21.1-2.6.20.jar",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/voicechat-fabric-1.21.1-2.6.20.jar",
+            "sha1": "82e475b258bd887e03d6d93d6564fa5ea869c6ee",
+            "size": 5361828
+        },
+        {
+            "path": "resourcepacks/CPA_Resourcepack.zip",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/resourcepacks/CPA_Resourcepack.zip",
+            "sha1": "e34ca59d5cfa56d63889cb5495e1976c895bb4ad",
+            "size": 139902
+        },
+        {
             "path": "servers.dat",
             "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/servers.dat",
             "sha1": "be8cfc3f0472bdfd5dd8ac4f09f7bac12383b992",
