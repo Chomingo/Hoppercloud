@@ -80,13 +80,15 @@ const manifest = {
     version: MANIFEST_VERSION,
     gameVersion: GAME_VERSION,
     launcherVersion: LAUNCHER_VERSION,
-    launcherUrl: `https://github.com/${REPO_USER}/${REPO_NAME}/releases/download/v${LAUNCHER_VERSION}/horizonsetup-${LAUNCHER_VERSION}.exe`,
+    launcherUrl: `https://github.com/${REPO_USER}/${REPO_NAME}/releases/download/v${LAUNCHER_VERSION}/safiolandsetup-${LAUNCHER_VERSION}.exe`,
     files
 };
 
 fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 4));
+const HORIZON_MANIFEST_PATH = path.join(__dirname, 'manifest_horizon.json');
+fs.writeFileSync(HORIZON_MANIFEST_PATH, JSON.stringify(manifest, null, 4));
 
-console.log(`Manifest generated at ${MANIFEST_PATH}`);
+console.log(`Manifest generated at ${MANIFEST_PATH} and ${HORIZON_MANIFEST_PATH}`);
 console.log(`Total files: ${files.length}`);
 console.log(`Version: ${MANIFEST_VERSION}`);
 console.log(`LAUNCHER_VERSION=${LAUNCHER_VERSION}`);

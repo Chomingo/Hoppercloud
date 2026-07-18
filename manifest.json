@@ -2,7 +2,7 @@
     "version": "2026.07.18",
     "gameVersion": "fabric-loader-0.17.2-1.21.1",
     "launcherVersion": "1.1.1",
-    "launcherUrl": "https://github.com/Chomingo/Hoppercloud/releases/download/v1.1.1/horizonsetup-1.1.1.exe",
+    "launcherUrl": "https://github.com/Chomingo/Hoppercloud/releases/download/v1.1.1/safiolandsetup-1.1.1.exe",
     "files": [
         {
             "path": "fancymenu_data/action_favorites.json",
