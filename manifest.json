@@ -1,14 +1,80 @@
 {
-    "version": "2026.01.31",
-    "gameVersion": "fabric-loader-0.17.2-1.21.9",
-    "launcherVersion": "1.0.0",
-    "launcherUrl": "https://github.com/Chomingo/Hoppercloud/releases/download/v1.0.0/safiolandsetup-1.0.0.exe",
+    "version": "2026.07.18",
+    "gameVersion": "fabric-loader-0.17.2-1.21.1",
+    "launcherVersion": "1.1.1",
+    "launcherUrl": "https://github.com/Chomingo/Hoppercloud/releases/download/v1.1.1/horizonsetup-1.1.1.exe",
     "files": [
         {
-            "path": "modpacks/Horizon Modpack 2.0.0.mrpack",
-            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/modpacks/Horizon Modpack 2.0.0.mrpack",
-            "sha1": "20c1a4f060e928fba75ce6cd10c76ea7cf6cc8b9",
-            "size": 13462562
+            "path": "fancymenu_data/action_favorites.json",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/fancymenu_data/action_favorites.json",
+            "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+            "size": 0
+        },
+        {
+            "path": "fancymenu_data/browser_audio_settings.json",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/fancymenu_data/browser_audio_settings.json",
+            "sha1": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+            "size": 0
+        },
+        {
+            "path": "fancymenu_data/browser_video_settings.json",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/fancymenu_data/browser_video_settings.json",
+            "sha1": "78aa7daee0727067dd36220e15a65e61694b04ab",
+            "size": 19
+        },
+        {
+            "path": "fancymenu_data/buddy/buddy_leveling_MGI0OWVjMDItYTRmYS00NWQwLTg5MmEtZTYzMzQzMTRmNDFjLTE3ODM5MjQ2OTQwNjQ.json",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/fancymenu_data/buddy/buddy_leveling_MGI0OWVjMDItYTRmYS00NWQwLTg5MmEtZTYzMzQzMTRmNDFjLTE3ODM5MjQ2OTQwNjQ.json",
+            "sha1": "d99d243ed7953eb0e48f478825807a4f505a4305",
+            "size": 1619
+        },
+        {
+            "path": "fancymenu_data/buddy/buddy_leveling_MmRjYTU2ZTktMTM5NC00MDMwLTgwYmItMDYyNGVhMDIxMWQ0LTE3ODQyNjU5OTI5NzE.json",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/fancymenu_data/buddy/buddy_leveling_MmRjYTU2ZTktMTM5NC00MDMwLTgwYmItMDYyNGVhMDIxMWQ0LTE3ODQyNjU5OTI5NzE.json",
+            "sha1": "d99d243ed7953eb0e48f478825807a4f505a4305",
+            "size": 1619
+        },
+        {
+            "path": "fancymenu_data/buddy/buddy_leveling_Njg0MGRjMTgtNmE0Ni00Mjg2LTgzYjYtOTUwMjQzZWVjMDI3LTE3ODM5Njg3NjU5MTM.json",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/fancymenu_data/buddy/buddy_leveling_Njg0MGRjMTgtNmE0Ni00Mjg2LTgzYjYtOTUwMjQzZWVjMDI3LTE3ODM5Njg3NjU5MTM.json",
+            "sha1": "d99d243ed7953eb0e48f478825807a4f505a4305",
+            "size": 1619
+        },
+        {
+            "path": "fancymenu_data/buddy/buddy_leveling_ZmViMjgzNjYtOTEyMi00MjU3LThjNzgtYzBiNTU3NTYyZThhLTE3ODQyNjU5Njg2MDc.json",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/fancymenu_data/buddy/buddy_leveling_ZmViMjgzNjYtOTEyMi00MjU3LThjNzgtYzBiNTU3NTYyZThhLTE3ODQyNjU5Njg2MDc.json",
+            "sha1": "d99d243ed7953eb0e48f478825807a4f505a4305",
+            "size": 1619
+        },
+        {
+            "path": "fancymenu_data/buddy/buddy_save_MGI0OWVjMDItYTRmYS00NWQwLTg5MmEtZTYzMzQzMTRmNDFjLTE3ODM5MjQ2OTQwNjQ.json",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/fancymenu_data/buddy/buddy_save_MGI0OWVjMDItYTRmYS00NWQwLTg5MmEtZTYzMzQzMTRmNDFjLTE3ODM5MjQ2OTQwNjQ.json",
+            "sha1": "cc1c3db060663fcf32eb88bd2242fd5fa6bcbe05",
+            "size": 380
+        },
+        {
+            "path": "fancymenu_data/buddy/buddy_save_MmRjYTU2ZTktMTM5NC00MDMwLTgwYmItMDYyNGVhMDIxMWQ0LTE3ODQyNjU5OTI5NzE.json",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/fancymenu_data/buddy/buddy_save_MmRjYTU2ZTktMTM5NC00MDMwLTgwYmItMDYyNGVhMDIxMWQ0LTE3ODQyNjU5OTI5NzE.json",
+            "sha1": "2ce3500386cdad9054b689a1ca3204615e2d3769",
+            "size": 380
+        },
+        {
+            "path": "fancymenu_data/buddy/buddy_save_Njg0MGRjMTgtNmE0Ni00Mjg2LTgzYjYtOTUwMjQzZWVjMDI3LTE3ODM5Njg3NjU5MTM.json",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/fancymenu_data/buddy/buddy_save_Njg0MGRjMTgtNmE0Ni00Mjg2LTgzYjYtOTUwMjQzZWVjMDI3LTE3ODM5Njg3NjU5MTM.json",
+            "sha1": "2ce3500386cdad9054b689a1ca3204615e2d3769",
+            "size": 380
+        },
+        {
+            "path": "fancymenu_data/buddy/buddy_save_ZmViMjgzNjYtOTEyMi00MjU3LThjNzgtYzBiNTU3NTYyZThhLTE3ODQyNjU5Njg2MDc.json",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/fancymenu_data/buddy/buddy_save_ZmViMjgzNjYtOTEyMi00MjU3LThjNzgtYzBiNTU3NTYyZThhLTE3ODQyNjU5Njg2MDc.json",
+            "sha1": "2ce3500386cdad9054b689a1ca3204615e2d3769",
+            "size": 380
+        },
+        {
+            "path": "fancymenu_data/last_world.fmdata",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/fancymenu_data/last_world.fmdata",
+            "sha1": "4bbeb6140865e84e12886d2c927c88634a56106e",
+            "size": 85
         },
         {
             "path": "servers.dat",
