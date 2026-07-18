@@ -13,7 +13,7 @@ class GameUpdater extends EventEmitter {
     constructor() {
         super();
         this.gameRoot = GAME_ROOT;
-        this.concurrencyLimit = 10;
+        this.concurrencyLimit = 15;
         this.preservedFiles = ['options.txt', 'optionsof.txt', 'optionsshaders.txt', 'servers.dat'];
         this.localManifest = null;
     }

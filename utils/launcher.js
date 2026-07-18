@@ -87,7 +87,7 @@ async function launchGame(username, sender, auth = null, memory = '4G', logCallb
         },
         memory: {
             max: maxMemory,
-            min: minMemory
+            min: '1G'
         },
         overrides: {
             detached: false,
@@ -96,24 +96,36 @@ async function launchGame(username, sender, auth = null, memory = '4G', logCallb
             gameDirectory: gameDirectory // Directorio específico de la instancia
         },
         jvmArgs: [
+            // --- G1GC Garbage Collector (optimizado para bajo consumo de RAM) ---
             "-XX:+UseG1GC",
             "-XX:+ParallelRefProcEnabled",
-            "-XX:MaxGCPauseMillis=200",
+            "-XX:MaxGCPauseMillis=100",
             "-XX:+UnlockExperimentalVMOptions",
             "-XX:+DisableExplicitGC",
             "-XX:+AlwaysPreTouch",
-            "-XX:G1NewSizePercent=30",
-            "-XX:G1MaxNewSizePercent=40",
-            "-XX:G1HeapRegionSize=8M",
-            "-XX:G1ReservePercent=20",
+            "-XX:G1NewSizePercent=20",
+            "-XX:G1MaxNewSizePercent=35",
+            "-XX:G1HeapRegionSize=4M",
+            "-XX:G1ReservePercent=15",
             "-XX:G1HeapWastePercent=5",
             "-XX:G1MixedGCCountTarget=4",
-            "-XX:InitiatingHeapOccupancyPercent=15",
+            "-XX:InitiatingHeapOccupancyPercent=20",
             "-XX:G1MixedGCLiveThresholdPercent=90",
             "-XX:G1RSetUpdatingPauseTimePercent=5",
             "-XX:SurvivorRatio=32",
             "-XX:+PerfDisableSharedMem",
             "-XX:MaxTenuringThreshold=1",
+            // --- Optimización de memoria y strings ---
+            "-XX:+UseStringDeduplication",
+            "-XX:+OptimizeStringConcat",
+            "-XX:+UseCompressedOops",
+            "-XX:+UseCompressedClassPointers",
+            // --- Arranque más rápido ---
+            "-XX:+TieredCompilation",
+            "-XX:TieredStopAtLevel=1",
+            // --- Fabric / Mod compatibility ---
+            "-Dfml.ignorePatchDiscrepancies=true",
+            "-Dfml.ignoreInvalidMinecraftCertificates=true",
             "-Dusing.aikars.flags=https://mcflags.emc.gs",
             "-Daikars.new.flags=true"
         ]
