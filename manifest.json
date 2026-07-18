@@ -1,8 +1,8 @@
 {
     "version": "2026.01.31",
     "gameVersion": "fabric-loader-0.17.2-1.21.9",
-    "launcherVersion": "1.1.1",
-    "launcherUrl": "https://github.com/Chomingo/Hoppercloud/releases/download/v1.1.1/horizonsetup-1.1.1.exe",
+    "launcherVersion": "1.0.0",
+    "launcherUrl": "https://github.com/Chomingo/Hoppercloud/releases/download/v1.0.0/safiolandsetup-1.0.0.exe",
     "files": [
         {
             "path": "modpacks/Horizon Modpack 2.0.0.mrpack",
