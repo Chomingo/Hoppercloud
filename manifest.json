@@ -89,6 +89,12 @@
             "size": 376584
         },
         {
+            "path": "mods/extremotool.jar",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/extremotool.jar",
+            "sha1": "a4e3732fbe56204b9935e82bb91fd5ba838735d0",
+            "size": 22757060
+        },
+        {
             "path": "mods/fabric-api-0.116.13+1.21.1.jar",
             "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/fabric-api-0.116.13+1.21.1.jar",
             "sha1": "a8107fd8fd3e805d9ca87453e36b4556d92b55da",
@@ -141,6 +147,12 @@
             "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/voicechat-fabric-1.21.1-2.6.20.jar",
             "sha1": "82e475b258bd887e03d6d93d6564fa5ea869c6ee",
             "size": 5361828
+        },
+        {
+            "path": "mods/xaerominimap-fabric-1.21.1-26.4.2.jar",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/xaerominimap-fabric-1.21.1-26.4.2.jar",
+            "sha1": "9293ef9b2626ae3180625c003290a838879cc0b4",
+            "size": 2233608
         },
         {
             "path": "resourcepacks/CPA_Resourcepack.zip",
