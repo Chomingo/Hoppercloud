@@ -1,7 +1,7 @@
 module.exports = [
     {
         id: 'default',
-        name: 'Horizon Launcher',
+        name: 'Safioland Launcher',
         icon: 'assets/logo.png',
         description: 'Instancia Principal',
         modsDir: 'mods',

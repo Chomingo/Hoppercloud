@@ -2,7 +2,7 @@ const DiscordRPC = require('discord-rpc');
 
 class DiscordManager {
     constructor() {
-        this.clientId = '1454989388063969362'; // ID oficial de Horizon Launcher
+        this.clientId = '1454989388063969362'; // ID oficial de Safioland Launcher
         this.rpc = null;
         this.startPos = Date.now();
         this.active = false;
@@ -52,7 +52,7 @@ class DiscordManager {
             state: state || (this.currentInstance ? `Jugando: ${this.currentInstance}` : 'A punto de iniciar'),
             startTimestamp: this.startPos,
             largeImageKey: 'logo', // Cambiado de 'icon' a 'logo' para probar
-            largeImageText: 'Horizon Launcher',
+            largeImageText: 'Safioland Launcher',
             instance: true,
         };
 

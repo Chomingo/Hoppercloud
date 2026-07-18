@@ -1,4 +1,4 @@
-# 🛠️ Guía del Administrador - Horizon Launcher
+# 🛠️ Guía del Administrador - Safioland Launcher
 
 Esta guía contiene todo lo que necesitas saber para operar, actualizar y personalizar tu launcher.
 

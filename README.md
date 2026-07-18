@@ -1,4 +1,4 @@
-# Horizon launcher
+# Safioland Launcher
 
 launcher personalizado para servidores de Minecraft, soporte para cuentas premium y gestión de modpacks
 

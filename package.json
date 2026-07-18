@@ -1,8 +1,8 @@
 {
-  "name": "horizon-launcher",
-  "productName": "Horizon Launcher",
+  "name": "safioland-launcher",
+  "productName": "Safioland Launcher",
   "version": "1.0.1",
-  "description": "Horizon Launcher - Cliente oficial para comunidades de Minecraft.",
+  "description": "Safioland Launcher - Cliente oficial para comunidades de Minecraft.",
   "author": {
     "name": "Chomingo",
     "email": "support@hoppercloud.net"
@@ -25,7 +25,7 @@
     ],
     "win": {
       "target": "nsis",
-      "artifactName": "horizonLauncherSetup-${version}.${ext}",
+      "artifactName": "safiolandLauncherSetup-${version}.${ext}",
       "icon": "assets/logo.png"
     },
     "files": [

@@ -40,7 +40,7 @@
     },
     {
         "id": "instance_horizon",
-        "name": "Horizon Modpack",
+        "name": "Safioland Modpack",
         "icon": "assets/icon.png",
         "description": "Modpack de Civilization Event",
         "modsDir": "instances/horizon/mods",
