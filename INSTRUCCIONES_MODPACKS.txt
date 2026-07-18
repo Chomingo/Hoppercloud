@@ -1,0 +1,54 @@
+# 📦 GUÍA DE GESTIÓN DE MODPACKS (.MRPACK)
+
+Este launcher está optimizado para trabajar con archivos .mrpack de Modrinth, lo que facilita mucho la actualización de los packs de mods y sus configuraciones.
+
+---
+
+## 🚀 1. CÓMO ACTUALIZAR UN MODPACK
+
+1.  **PREPARA EL ARCHIVO**:
+    Exporta tu modpack desde CurseForge o Prism Launcher como un archivo .mrpack.
+    
+2.  **COLOCA EL ARCHIVO**:
+    Guárdalo en la carpeta:
+    > update_files/modpacks/Nombre_Del_Pack.mrpack
+
+3.  **CONFIGURA EL MANIFIESTO**:
+    Abre `manifest.json` (o el manifest del perfil correspondiente) y actualiza la ruta:
+    ```json
+    "mrpack": "update_files/modpacks/Nombre_Del_Pack.mrpack"
+    ```
+    *TIP: Si quieres cargar varios packs a la vez, usa una lista: ["pack1.mrpack", "pack2.mrpack"]*
+
+4.  **SUBE A GITHUB**:
+    > git add .
+    > git commit -m "Actualizado modpack a la versión X.Y.Z"
+    > git push origin master
+
+---
+
+## 🔧 2. CONFIGURACIONES Y OVERRIDES
+
+El launcher procesa automáticamente estas carpetas dentro del .mrpack:
+- **overrides**: Configuraciones base.
+- **client-overrides**: Configuraciones específicas del cliente (muchos packs de Modrinth usan esta).
+
+Todo lo que metas en estas carpetas dentro del .mrpack (como configs de bobby, shaderpacks, etc.) se copiará automáticamente a la carpeta del juego del jugador.
+
+---
+
+## ⚠️ 3. CAMBIOS DE VERSION DE MINECRAFT
+
+Si cambias de una versión (ej: 1.20.1) a otra (ej: 1.21.9):
+1. Cambia el campo `gameVersion` en el `manifest.json`.
+2. El launcher detectará que la versión es diferente y **LIMPIARÁ AUTOMÁTICAMENTE** la carpeta de mods del jugador.
+3. Esto garantiza que no queden mods viejos incompatibles que rompan el juego.
+
+---
+
+## 📁 4. INSTANCIAS SEPARADAS (RECOMENDADO)
+
+Si quieres que los jugadores puedan tener varios modpacks instalados al mismo tiempo sin que se mezclen:
+1. En `remote_instances.json`, asegúrate de que cada perfil tenga un `gameDir` único.
+   Ejemplo: `"gameDir": "instances/horizon"`
+2. Esto creará carpetas separadas para cada pack, permitiendo que uno sea 1.20.1 y otro 1.21.9 sin conflictos.

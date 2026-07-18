@@ -1,0 +1,188 @@
+const fs = require('fs-extra');
+const path = require('path');
+const { Client } = require('minecraft-launcher-core');
+const { GAME_ROOT } = require('./constants');
+const launcher = new Client();
+
+const defaultInstances = require('./instances');
+
+async function launchGame(username, sender, auth = null, memory = '4G', logCallback = null, instanceId = 'default', instancesList = null) {
+    const instances = instancesList || defaultInstances;
+    // Determine Game Directory first to find the correct manifest
+    let gameDirectory = GAME_ROOT;
+    const selectedInstance = instances.find(i => i.id === instanceId);
+
+    if (selectedInstance && selectedInstance.gameDir) {
+        gameDirectory = path.isAbsolute(selectedInstance.gameDir) ? selectedInstance.gameDir : path.join(GAME_ROOT, selectedInstance.gameDir);
+    } else if (selectedInstance && selectedInstance.id !== 'default') {
+        gameDirectory = path.join(GAME_ROOT, 'instances', selectedInstance.id);
+    }
+
+    // Load manifest from the SPECIFIC instance directory (preferred) or global fallback
+    let manifest = {};
+    try {
+        const instanceManifest = path.join(gameDirectory, 'client-manifest.json');
+        const globalManifest = path.join(GAME_ROOT, 'client-manifest.json');
+
+        if (await fs.pathExists(instanceManifest)) {
+            manifest = await fs.readJson(instanceManifest);
+        } else {
+            manifest = await fs.readJson(globalManifest);
+        }
+    } catch (e) {
+        const msg = 'Warning: No manifest found. Using default 1.20.1.';
+        sender.send('log', msg);
+        if (logCallback) logCallback(msg);
+    }
+
+    // Default to 1.20.1 if not specified
+    const gameVersion = manifest.gameVersion || '1.20.1';
+    const versionType = manifest.versionType || 'release'; // 'release' or 'custom'
+    const maxMemory = memory || manifest.maxMemory || '4G';
+    const minMemory = manifest.minMemory || '2G';
+
+    // Authorization (offline mode for now, or passed username)
+    // Generate a consistent offline UUID from the username
+    const crypto = require('crypto');
+    const offlineUuid = crypto.createHash('md5').update('OfflinePlayer:' + username).digest('hex');
+
+    const token = {
+        access_token: 'token',
+        client_token: 'token',
+        uuid: offlineUuid,
+        name: username,
+        user_properties: '{}',
+        meta: {
+            type: 'mojang',
+            demo: false
+        }
+    };
+
+    // Ensure Java 21 is available
+    const JavaManager = require('./JavaManager');
+    const javaManager = new JavaManager(sender);
+    let javaPath;
+
+    try {
+        sender.send('status', 'Verificando Java');
+        javaPath = await javaManager.ensureJava();
+    } catch (e) {
+        const msg = `Error preparando Java: ${e.message}`;
+        sender.send('error', msg);
+        if (logCallback) logCallback(msg);
+        throw e; // Stop launch
+    }
+
+    // Ensure directory exists
+    await fs.ensureDir(gameDirectory);
+
+    const opts = {
+        clientPackage: null,
+        authorization: auth || Promise.resolve(token),
+        root: GAME_ROOT, // Helper files (assets, libraries) remain shared
+        javaPath: javaPath,
+        version: {
+            number: gameVersion,
+            type: versionType
+        },
+        memory: {
+            max: maxMemory,
+            min: minMemory
+        },
+        overrides: {
+            detached: false,
+            checkFiles: true, // IMPORTANTE: Verificar que las librerías existan y estén completas
+            checkHash: true, // IMPORTANTE: Verificar integridad (SHA1) para evitar ZipException por archivos corruptos
+            gameDirectory: gameDirectory // Directorio específico de la instancia
+        },
+        jvmArgs: [
+            "-XX:+UseG1GC",
+            "-XX:+ParallelRefProcEnabled",
+            "-XX:MaxGCPauseMillis=200",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:+DisableExplicitGC",
+            "-XX:+AlwaysPreTouch",
+            "-XX:G1NewSizePercent=30",
+            "-XX:G1MaxNewSizePercent=40",
+            "-XX:G1HeapRegionSize=8M",
+            "-XX:G1ReservePercent=20",
+            "-XX:G1HeapWastePercent=5",
+            "-XX:G1MixedGCCountTarget=4",
+            "-XX:InitiatingHeapOccupancyPercent=15",
+            "-XX:G1MixedGCLiveThresholdPercent=90",
+            "-XX:G1RSetUpdatingPauseTimePercent=5",
+            "-XX:SurvivorRatio=32",
+            "-XX:+PerfDisableSharedMem",
+            "-XX:MaxTenuringThreshold=1",
+            "-Dusing.aikars.flags=https://mcflags.emc.gs",
+            "-Daikars.new.flags=true"
+        ]
+    };
+
+    // Verify the file exists in the standard location, but DO NOT pass 'custom' path to opts.
+    // MCLC should find it automatically at versions/{number}/{number}.json
+    if (versionType === 'custom') {
+        const standardPath = path.join(GAME_ROOT, 'versions', gameVersion, `${gameVersion}.json`);
+        const msg1 = `Buscando JSON personalizado en ruta estándar: ${standardPath}`;
+        sender.send('log', msg1);
+        if (logCallback) logCallback(msg1);
+
+        if (fs.existsSync(standardPath)) {
+            const msg2 = 'Archivo existe: true. Dejando que MCLC lo encuentre automáticamente.';
+            sender.send('log', msg2);
+            if (logCallback) logCallback(msg2);
+            // We do NOT set opts.version.custom here.
+        } else {
+            const msg3 = `ADVERTENCIA: Archivo JSON personalizado NO encontrado en: ${standardPath}`;
+            sender.send('log', msg3);
+            if (logCallback) logCallback(msg3);
+        }
+    }
+
+    // Helper to safely send IPC messages and log to console
+    const safeLog = (msg) => {
+        if (!sender.isDestroyed()) {
+            sender.send('log', msg);
+        }
+        if (logCallback) logCallback(msg);
+    };
+
+    const safeSend = (channel, ...args) => {
+        if (!sender.isDestroyed()) {
+            sender.send(channel, ...args);
+        }
+    };
+
+    safeLog(`Lanzando Minecraft ${gameVersion} (${versionType})...`);
+    safeLog(`Instancia: ${selectedInstance ? selectedInstance.name : 'Default'}`);
+    safeLog(`Directorio de juego: ${gameDirectory}`);
+    safeLog(`Usando Java en: ${javaPath}`);
+    // safeLog(`Opciones de lanzamiento: ${JSON.stringify(opts, null, 2)}`);
+
+    // Progress of game files downloading (assets, jar, etc.)
+    launcher.on('progress', (e) => {
+        safeSend('progress', { current: e.task, total: e.total, type: 'game-download' });
+    });
+
+    launcher.on('debug', (e) => {
+        // safeLog(`[MC Debug] ${e}`); // Too verbose?
+        fs.appendFileSync(path.join(gameDirectory, 'debug_log.txt'), e + '\n'); // User instance dir for logs
+        if (e.includes('Launching with arguments')) {
+            fs.writeFileSync(path.join(gameDirectory, 'launch_cmd.txt'), e);
+        }
+    });
+    launcher.on('data', (e) => safeLog(`[MC Salida] ${e}`));
+    launcher.on('error', (e) => {
+        safeLog(`[MC Error] ${e}`);
+        safeSend('launch-error', e.message);
+    });
+    launcher.on('close', (e) => {
+        safeLog(`[MC Cerrado] ${e}`);
+        safeSend('launch-close', e);
+    });
+
+    await fs.writeJson(path.join(gameDirectory, 'launch_args.json'), opts, { spaces: 4 });
+    await launcher.launch(opts);
+}
+
+module.exports = { launchGame };

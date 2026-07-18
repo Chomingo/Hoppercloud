@@ -1,0 +1,20 @@
+{
+    "version": "2026.01.31",
+    "gameVersion": "fabric-loader-0.17.2-1.21.9",
+    "launcherVersion": "1.1.1",
+    "launcherUrl": "https://github.com/Chomingo/Hoppercloud/releases/download/v1.1.1/horizonsetup-1.1.1.exe",
+    "files": [
+        {
+            "path": "modpacks/Horizon Modpack 2.0.0.mrpack",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/modpacks/Horizon Modpack 2.0.0.mrpack",
+            "sha1": "20c1a4f060e928fba75ce6cd10c76ea7cf6cc8b9",
+            "size": 13462562
+        },
+        {
+            "path": "servers.dat",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/servers.dat",
+            "sha1": "be8cfc3f0472bdfd5dd8ac4f09f7bac12383b992",
+            "size": 77
+        }
+    ]
+}
