@@ -68,7 +68,7 @@ class DiscordManager {
     }
 
     setPlayingStatus(instanceName) {
-        this.currentStatus = 'Jugando Civilization Event';
+        this.currentStatus = 'En servidor';
         this.currentInstance = instanceName;
         this.updateActivity();
     }

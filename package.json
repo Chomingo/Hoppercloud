@@ -28,6 +28,12 @@
       "artifactName": "safiolandLauncherSetup-${version}.${ext}",
       "icon": "assets/logo.png"
     },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "artifactName": "safiolandLauncher-${version}.${ext}",
+      "icon": "assets/logo.png",
+      "category": "Game"
+    },
     "files": [
       "ui/**/*",
       "utils/**/*",
