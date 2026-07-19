@@ -1,6 +1,6 @@
 {
-    "version": "2026.07.18",
-    "gameVersion": "fabric-loader-0.17.2-1.21.1",
+    "version": "2026.07.19",
+    "gameVersion": "fabric-loader-0.18.6-1.21.1",
     "launcherVersion": "1.1.1",
     "launcherUrl": "https://github.com/Chomingo/Hoppercloud/releases/download/v1.1.1/safiolandsetup-1.1.1.exe",
     "files": [
@@ -95,16 +95,10 @@
             "size": 22757060
         },
         {
-            "path": "mods/fabric-api-0.116.13+1.21.1.jar",
-            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/fabric-api-0.116.13+1.21.1.jar",
-            "sha1": "a8107fd8fd3e805d9ca87453e36b4556d92b55da",
-            "size": 2427135
-        },
-        {
-            "path": "mods/fancymenu_fabric_3.9.8_MC_1.21.1.jar",
-            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/fancymenu_fabric_3.9.8_MC_1.21.1.jar",
-            "sha1": "72cf81b069075a39996d4b2360ffca3299ab539e",
-            "size": 25757227
+            "path": "mods/fabric-api-0.116.14+1.21.1.jar",
+            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/fabric-api-0.116.14+1.21.1.jar",
+            "sha1": "1bc9caf399a9eadddaec3215e31594ca40fc9485",
+            "size": 2451978
         },
         {
             "path": "mods/geckolib-fabric-1.21.1-4.9.2.jar",
@@ -135,12 +129,6 @@
             "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/sodium-fabric-0.8.12+mc1.21.1.jar",
             "sha1": "70381d969eb63c0aa09dc581ef4b9a79782c0123",
             "size": 1573180
-        },
-        {
-            "path": "mods/sodiumoptionsapi-fabric-1.0.10-1.21.1.jar",
-            "url": "https://raw.githubusercontent.com/Chomingo/Hoppercloud/master/update_files/mods/sodiumoptionsapi-fabric-1.0.10-1.21.1.jar",
-            "sha1": "ca8c29ad2481ab5fe81095181541d183fa7faf19",
-            "size": 903592
         },
         {
             "path": "mods/voicechat-fabric-1.21.1-2.6.20.jar",
